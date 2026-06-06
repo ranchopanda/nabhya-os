@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { productUpdates } from "@/lib/mock-data";
 import { Plus } from "lucide-react";
 
-export const Route = createFileRoute("/product")({
+export const Route = createFileRoute("/_authenticated/product")({
   head: () => ({ meta: [{ title: "Product Log · Nabhya OS" }, { name: "description", content: "Weekly feature shipping log across AI, frontend, backend, and research." }] }),
   component: Product,
 });

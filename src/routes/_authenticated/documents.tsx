@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Folder, Search } from "lucide-react";
 
-export const Route = createFileRoute("/documents")({
+export const Route = createFileRoute("/_authenticated/documents")({
   head: () => ({ meta: [{ title: "Document Hub · Nabhya OS" }, { name: "description", content: "Central storage for business, research, legal and financial docs." }] }),
   component: Documents,
 });

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { milestones } from "@/lib/mock-data";
 
-export const Route = createFileRoute("/milestones")({
+export const Route = createFileRoute("/_authenticated/milestones")({
   head: () => ({ meta: [{ title: "Milestones · Nabhya OS" }, { name: "description", content: "The story of Nabhya, in chronological order." }] }),
   component: Milestones,
 });

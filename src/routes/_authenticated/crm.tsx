@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { recentLeads } from "@/lib/mock-data";
 import { Plus, Search } from "lucide-react";
 
-export const Route = createFileRoute("/crm")({
+export const Route = createFileRoute("/_authenticated/crm")({
   head: () => ({ meta: [{ title: "CRM & Lead Pipeline · Nabhya OS" }, { name: "description", content: "Track every organization Nabhya is in conversation with." }] }),
   component: CRM,
 });
