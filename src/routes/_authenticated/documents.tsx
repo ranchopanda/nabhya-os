@@ -1,35 +1,83 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { Suspense, useState, useMemo } from "react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Folder, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { UploadDialog } from "@/components/UploadDialog";
+import { proofDocsQuery } from "@/lib/queries";
+import { useCurrentRole } from "@/hooks/use-current-role";
+import { supabase } from "@/integrations/supabase/client";
+import { Search, Upload, FileText, Download } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/documents")({
-  head: () => ({ meta: [{ title: "Document Hub · Nabhya OS" }, { name: "description", content: "Central storage for business, research, legal and financial docs." }] }),
-  component: Documents,
+  head: () => ({ meta: [{ title: "Document Hub · Nabhya OS" }, { name: "description", content: "Central storage for business and research docs." }] }),
+  loader: ({ context }) => { context.queryClient.ensureQueryData(proofDocsQuery("document")); },
+  component: DocsPage,
+  errorComponent: ({ error }) => <AppShell><div className="p-10 text-sm text-destructive">Failed: {error.message}</div></AppShell>,
+  notFoundComponent: () => <AppShell><div className="p-10">Not found</div></AppShell>,
 });
 
-const folders = ["Business", "Research", "Financial", "Legal", "Presentations", "Competition Submissions"];
+async function downloadFile(path: string) {
+  const { data, error } = await supabase.storage.from("proof-vault").createSignedUrl(path, 60);
+  if (error || !data) { toast.error(error?.message ?? "Failed"); return; }
+  window.open(data.signedUrl, "_blank");
+}
 
-function Documents() {
+function DocsPage() {
+  const { canEdit } = useCurrentRole();
   return (
     <AppShell>
       <div className="px-6 lg:px-10 py-8 max-w-[1400px] mx-auto">
-        <PageHeader eyebrow="Module 9" title="Document Hub" description="One place. Searchable. Always current." />
-        <Card className="p-4 mb-6 flex items-center gap-3">
-          <Search className="h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search every document…" className="border-0 focus-visible:ring-0 shadow-none" />
-        </Card>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {folders.map((f) => (
-            <Card key={f} className="p-5 hover:shadow-[var(--shadow-card)] transition-shadow cursor-pointer">
-              <Folder className="h-8 w-8 text-brand-green" />
-              <div className="mt-3 font-medium">{f}</div>
-              <div className="text-xs text-muted-foreground">{Math.floor(Math.random() * 30) + 4} files</div>
-            </Card>
-          ))}
-        </div>
+        <PageHeader
+          eyebrow="Module 9" title="Document Hub" description="One place. Searchable. Always current."
+          action={canEdit ? <UploadDialog kind="document" trigger={<Button size="sm"><Upload className="h-4 w-4" /> Upload Document</Button>} /> : undefined}
+        />
+        <Suspense fallback={<Skeleton className="h-96" />}>
+          <DocsBody />
+        </Suspense>
       </div>
     </AppShell>
+  );
+}
+
+function DocsBody() {
+  const { data: docs } = useSuspenseQuery(proofDocsQuery("document"));
+  const [q, setQ] = useState("");
+  const filtered = useMemo(() => {
+    const n = q.trim().toLowerCase();
+    if (!n) return docs;
+    return docs.filter((d) => [d.title, d.description, d.category].filter(Boolean).some((v) => (v as string).toLowerCase().includes(n)));
+  }, [docs, q]);
+  return (
+    <>
+      <Card className="p-4 mb-6 flex items-center gap-3">
+        <Search className="h-4 w-4 text-muted-foreground" />
+        <Input placeholder="Search documents…" className="border-0 focus-visible:ring-0 shadow-none" value={q} onChange={(e) => setQ(e.target.value)} />
+      </Card>
+      <Card>
+        {filtered.length === 0 ? (
+          <div className="px-5 py-12 text-center text-sm text-muted-foreground">No documents yet.</div>
+        ) : filtered.map((d) => (
+          <div key={d.id} className="px-5 py-4 border-b last:border-0 flex items-center gap-4">
+            <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="font-medium truncate">{d.title}</div>
+              {d.description && <div className="text-sm text-muted-foreground truncate">{d.description}</div>}
+            </div>
+            <Badge variant="secondary">{d.category}</Badge>
+            {d.file_path && (
+              <Button size="sm" variant="ghost" onClick={() => downloadFile(d.file_path!)}>
+                <Download className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        ))}
+      </Card>
+    </>
   );
 }

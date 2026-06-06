@@ -290,8 +290,11 @@ export type Database = {
           created_at: string
           description: string | null
           file_path: string | null
+          file_size: number | null
           file_type: string | null
           id: string
+          kind: string
+          mime_type: string | null
           title: string
           uploaded_by: string | null
         }
@@ -300,8 +303,11 @@ export type Database = {
           created_at?: string
           description?: string | null
           file_path?: string | null
+          file_size?: number | null
           file_type?: string | null
           id?: string
+          kind?: string
+          mime_type?: string | null
           title: string
           uploaded_by?: string | null
         }
@@ -310,8 +316,11 @@ export type Database = {
           created_at?: string
           description?: string | null
           file_path?: string | null
+          file_size?: number | null
           file_type?: string | null
           id?: string
+          kind?: string
+          mime_type?: string | null
           title?: string
           uploaded_by?: string | null
         }
@@ -324,6 +333,7 @@ export type Database = {
           description: string | null
           due_date: string | null
           id: string
+          position: number
           status: string
           title: string
           updated_at: string
@@ -334,6 +344,7 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          position?: number
           status?: string
           title: string
           updated_at?: string
@@ -344,6 +355,7 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          position?: number
           status?: string
           title?: string
           updated_at?: string
