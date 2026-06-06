@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { healthMetrics, pilots, milestones, team } from "@/lib/mock-data";
 import { Eye, Download, Share2 } from "lucide-react";
 
-export const Route = createFileRoute("/investor")({
+export const Route = createFileRoute("/_authenticated/investor")({
   head: () => ({ meta: [{ title: "Investor Room · Nabhya OS" }, { name: "description", content: "Read-only view: deck, traction, team and pilot outcomes." }] }),
   component: Investor,
 });

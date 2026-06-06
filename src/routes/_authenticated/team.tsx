@@ -3,7 +3,7 @@ import { AppShell, PageHeader } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { team } from "@/lib/mock-data";
 
-export const Route = createFileRoute("/team")({
+export const Route = createFileRoute("/_authenticated/team")({
   head: () => ({ meta: [{ title: "Team HQ · Nabhya OS" }, { name: "description", content: "Who's on the Nabhya team and what they're focused on." }] }),
   component: Team,
 });

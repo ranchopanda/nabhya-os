@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { applications } from "@/lib/mock-data";
 import { Plus } from "lucide-react";
 
-export const Route = createFileRoute("/applications")({
+export const Route = createFileRoute("/_authenticated/applications")({
   head: () => ({ meta: [{ title: "Application Tracker · Nabhya OS" }, { name: "description", content: "Incubators, grants, competitions and accelerators." }] }),
   component: Applications,
 });

@@ -10,7 +10,7 @@ import {
   Plus, Upload, FileCheck2, Megaphone, Wrench, ArrowUpRight, CheckCircle2,
 } from "lucide-react";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
       { title: "Nabhya OS · Executive Dashboard" },

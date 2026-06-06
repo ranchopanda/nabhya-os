@@ -9,127 +9,127 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TeamRouteImport } from './routes/team'
-import { Route as TasksRouteImport } from './routes/tasks'
-import { Route as ProofRouteImport } from './routes/proof'
-import { Route as ProductRouteImport } from './routes/product'
-import { Route as PilotsRouteImport } from './routes/pilots'
-import { Route as MilestonesRouteImport } from './routes/milestones'
-import { Route as InvestorRouteImport } from './routes/investor'
-import { Route as DocumentsRouteImport } from './routes/documents'
-import { Route as CrmRouteImport } from './routes/crm'
-import { Route as ContentRouteImport } from './routes/content'
-import { Route as ApplicationsRouteImport } from './routes/applications'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
+import { Route as AuthenticatedTasksRouteImport } from './routes/_authenticated/tasks'
+import { Route as AuthenticatedProofRouteImport } from './routes/_authenticated/proof'
+import { Route as AuthenticatedProductRouteImport } from './routes/_authenticated/product'
+import { Route as AuthenticatedPilotsRouteImport } from './routes/_authenticated/pilots'
+import { Route as AuthenticatedMilestonesRouteImport } from './routes/_authenticated/milestones'
+import { Route as AuthenticatedInvestorRouteImport } from './routes/_authenticated/investor'
+import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
+import { Route as AuthenticatedCrmRouteImport } from './routes/_authenticated/crm'
+import { Route as AuthenticatedContentRouteImport } from './routes/_authenticated/content'
+import { Route as AuthenticatedApplicationsRouteImport } from './routes/_authenticated/applications'
 
-const TeamRoute = TeamRouteImport.update({
-  id: '/team',
-  path: '/team',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TasksRoute = TasksRouteImport.update({
-  id: '/tasks',
-  path: '/tasks',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProofRoute = ProofRouteImport.update({
-  id: '/proof',
-  path: '/proof',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProductRoute = ProductRouteImport.update({
-  id: '/product',
-  path: '/product',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PilotsRoute = PilotsRouteImport.update({
-  id: '/pilots',
-  path: '/pilots',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MilestonesRoute = MilestonesRouteImport.update({
-  id: '/milestones',
-  path: '/milestones',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InvestorRoute = InvestorRouteImport.update({
-  id: '/investor',
-  path: '/investor',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DocumentsRoute = DocumentsRouteImport.update({
-  id: '/documents',
-  path: '/documents',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CrmRoute = CrmRouteImport.update({
-  id: '/crm',
-  path: '/crm',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContentRoute = ContentRouteImport.update({
-  id: '/content',
-  path: '/content',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApplicationsRoute = ApplicationsRouteImport.update({
-  id: '/applications',
-  path: '/applications',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
+const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
+  id: '/_authenticated/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
+  id: '/_authenticated/team',
+  path: '/team',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedTasksRoute = AuthenticatedTasksRouteImport.update({
+  id: '/_authenticated/tasks',
+  path: '/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedProofRoute = AuthenticatedProofRouteImport.update({
+  id: '/_authenticated/proof',
+  path: '/proof',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedProductRoute = AuthenticatedProductRouteImport.update({
+  id: '/_authenticated/product',
+  path: '/product',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedPilotsRoute = AuthenticatedPilotsRouteImport.update({
+  id: '/_authenticated/pilots',
+  path: '/pilots',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedMilestonesRoute = AuthenticatedMilestonesRouteImport.update({
+  id: '/_authenticated/milestones',
+  path: '/milestones',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedInvestorRoute = AuthenticatedInvestorRouteImport.update({
+  id: '/_authenticated/investor',
+  path: '/investor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedDocumentsRoute = AuthenticatedDocumentsRouteImport.update({
+  id: '/_authenticated/documents',
+  path: '/documents',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedCrmRoute = AuthenticatedCrmRouteImport.update({
+  id: '/_authenticated/crm',
+  path: '/crm',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedContentRoute = AuthenticatedContentRouteImport.update({
+  id: '/_authenticated/content',
+  path: '/content',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedApplicationsRoute =
+  AuthenticatedApplicationsRouteImport.update({
+    id: '/_authenticated/applications',
+    path: '/applications',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/applications': typeof ApplicationsRoute
-  '/content': typeof ContentRoute
-  '/crm': typeof CrmRoute
-  '/documents': typeof DocumentsRoute
-  '/investor': typeof InvestorRoute
-  '/milestones': typeof MilestonesRoute
-  '/pilots': typeof PilotsRoute
-  '/product': typeof ProductRoute
-  '/proof': typeof ProofRoute
-  '/tasks': typeof TasksRoute
-  '/team': typeof TeamRoute
+  '/applications': typeof AuthenticatedApplicationsRoute
+  '/content': typeof AuthenticatedContentRoute
+  '/crm': typeof AuthenticatedCrmRoute
+  '/documents': typeof AuthenticatedDocumentsRoute
+  '/investor': typeof AuthenticatedInvestorRoute
+  '/milestones': typeof AuthenticatedMilestonesRoute
+  '/pilots': typeof AuthenticatedPilotsRoute
+  '/product': typeof AuthenticatedProductRoute
+  '/proof': typeof AuthenticatedProofRoute
+  '/tasks': typeof AuthenticatedTasksRoute
+  '/team': typeof AuthenticatedTeamRoute
+  '/': typeof AuthenticatedIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/applications': typeof ApplicationsRoute
-  '/content': typeof ContentRoute
-  '/crm': typeof CrmRoute
-  '/documents': typeof DocumentsRoute
-  '/investor': typeof InvestorRoute
-  '/milestones': typeof MilestonesRoute
-  '/pilots': typeof PilotsRoute
-  '/product': typeof ProductRoute
-  '/proof': typeof ProofRoute
-  '/tasks': typeof TasksRoute
-  '/team': typeof TeamRoute
+  '/applications': typeof AuthenticatedApplicationsRoute
+  '/content': typeof AuthenticatedContentRoute
+  '/crm': typeof AuthenticatedCrmRoute
+  '/documents': typeof AuthenticatedDocumentsRoute
+  '/investor': typeof AuthenticatedInvestorRoute
+  '/milestones': typeof AuthenticatedMilestonesRoute
+  '/pilots': typeof AuthenticatedPilotsRoute
+  '/product': typeof AuthenticatedProductRoute
+  '/proof': typeof AuthenticatedProofRoute
+  '/tasks': typeof AuthenticatedTasksRoute
+  '/team': typeof AuthenticatedTeamRoute
+  '/': typeof AuthenticatedIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/applications': typeof ApplicationsRoute
-  '/content': typeof ContentRoute
-  '/crm': typeof CrmRoute
-  '/documents': typeof DocumentsRoute
-  '/investor': typeof InvestorRoute
-  '/milestones': typeof MilestonesRoute
-  '/pilots': typeof PilotsRoute
-  '/product': typeof ProductRoute
-  '/proof': typeof ProofRoute
-  '/tasks': typeof TasksRoute
-  '/team': typeof TeamRoute
+  '/_authenticated/applications': typeof AuthenticatedApplicationsRoute
+  '/_authenticated/content': typeof AuthenticatedContentRoute
+  '/_authenticated/crm': typeof AuthenticatedCrmRoute
+  '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
+  '/_authenticated/investor': typeof AuthenticatedInvestorRoute
+  '/_authenticated/milestones': typeof AuthenticatedMilestonesRoute
+  '/_authenticated/pilots': typeof AuthenticatedPilotsRoute
+  '/_authenticated/product': typeof AuthenticatedProductRoute
+  '/_authenticated/proof': typeof AuthenticatedProofRoute
+  '/_authenticated/tasks': typeof AuthenticatedTasksRoute
+  '/_authenticated/team': typeof AuthenticatedTeamRoute
+  '/_authenticated/': typeof AuthenticatedIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
     | '/applications'
     | '/content'
     | '/crm'
@@ -141,9 +141,9 @@ export interface FileRouteTypes {
     | '/proof'
     | '/tasks'
     | '/team'
+    | '/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/applications'
     | '/content'
     | '/crm'
@@ -155,139 +155,140 @@ export interface FileRouteTypes {
     | '/proof'
     | '/tasks'
     | '/team'
+    | '/'
   id:
     | '__root__'
-    | '/'
-    | '/applications'
-    | '/content'
-    | '/crm'
-    | '/documents'
-    | '/investor'
-    | '/milestones'
-    | '/pilots'
-    | '/product'
-    | '/proof'
-    | '/tasks'
-    | '/team'
+    | '/_authenticated/applications'
+    | '/_authenticated/content'
+    | '/_authenticated/crm'
+    | '/_authenticated/documents'
+    | '/_authenticated/investor'
+    | '/_authenticated/milestones'
+    | '/_authenticated/pilots'
+    | '/_authenticated/product'
+    | '/_authenticated/proof'
+    | '/_authenticated/tasks'
+    | '/_authenticated/team'
+    | '/_authenticated/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  ApplicationsRoute: typeof ApplicationsRoute
-  ContentRoute: typeof ContentRoute
-  CrmRoute: typeof CrmRoute
-  DocumentsRoute: typeof DocumentsRoute
-  InvestorRoute: typeof InvestorRoute
-  MilestonesRoute: typeof MilestonesRoute
-  PilotsRoute: typeof PilotsRoute
-  ProductRoute: typeof ProductRoute
-  ProofRoute: typeof ProofRoute
-  TasksRoute: typeof TasksRoute
-  TeamRoute: typeof TeamRoute
+  AuthenticatedApplicationsRoute: typeof AuthenticatedApplicationsRoute
+  AuthenticatedContentRoute: typeof AuthenticatedContentRoute
+  AuthenticatedCrmRoute: typeof AuthenticatedCrmRoute
+  AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
+  AuthenticatedInvestorRoute: typeof AuthenticatedInvestorRoute
+  AuthenticatedMilestonesRoute: typeof AuthenticatedMilestonesRoute
+  AuthenticatedPilotsRoute: typeof AuthenticatedPilotsRoute
+  AuthenticatedProductRoute: typeof AuthenticatedProductRoute
+  AuthenticatedProofRoute: typeof AuthenticatedProofRoute
+  AuthenticatedTasksRoute: typeof AuthenticatedTasksRoute
+  AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/team': {
-      id: '/team'
-      path: '/team'
-      fullPath: '/team'
-      preLoaderRoute: typeof TeamRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/tasks': {
-      id: '/tasks'
-      path: '/tasks'
-      fullPath: '/tasks'
-      preLoaderRoute: typeof TasksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/proof': {
-      id: '/proof'
-      path: '/proof'
-      fullPath: '/proof'
-      preLoaderRoute: typeof ProofRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/product': {
-      id: '/product'
-      path: '/product'
-      fullPath: '/product'
-      preLoaderRoute: typeof ProductRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pilots': {
-      id: '/pilots'
-      path: '/pilots'
-      fullPath: '/pilots'
-      preLoaderRoute: typeof PilotsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/milestones': {
-      id: '/milestones'
-      path: '/milestones'
-      fullPath: '/milestones'
-      preLoaderRoute: typeof MilestonesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/investor': {
-      id: '/investor'
-      path: '/investor'
-      fullPath: '/investor'
-      preLoaderRoute: typeof InvestorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/documents': {
-      id: '/documents'
-      path: '/documents'
-      fullPath: '/documents'
-      preLoaderRoute: typeof DocumentsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crm': {
-      id: '/crm'
-      path: '/crm'
-      fullPath: '/crm'
-      preLoaderRoute: typeof CrmRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/content': {
-      id: '/content'
-      path: '/content'
-      fullPath: '/content'
-      preLoaderRoute: typeof ContentRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/applications': {
-      id: '/applications'
-      path: '/applications'
-      fullPath: '/applications'
-      preLoaderRoute: typeof ApplicationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
+    '/_authenticated/': {
+      id: '/_authenticated/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/team': {
+      id: '/_authenticated/team'
+      path: '/team'
+      fullPath: '/team'
+      preLoaderRoute: typeof AuthenticatedTeamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/tasks': {
+      id: '/_authenticated/tasks'
+      path: '/tasks'
+      fullPath: '/tasks'
+      preLoaderRoute: typeof AuthenticatedTasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/proof': {
+      id: '/_authenticated/proof'
+      path: '/proof'
+      fullPath: '/proof'
+      preLoaderRoute: typeof AuthenticatedProofRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/product': {
+      id: '/_authenticated/product'
+      path: '/product'
+      fullPath: '/product'
+      preLoaderRoute: typeof AuthenticatedProductRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/pilots': {
+      id: '/_authenticated/pilots'
+      path: '/pilots'
+      fullPath: '/pilots'
+      preLoaderRoute: typeof AuthenticatedPilotsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/milestones': {
+      id: '/_authenticated/milestones'
+      path: '/milestones'
+      fullPath: '/milestones'
+      preLoaderRoute: typeof AuthenticatedMilestonesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/investor': {
+      id: '/_authenticated/investor'
+      path: '/investor'
+      fullPath: '/investor'
+      preLoaderRoute: typeof AuthenticatedInvestorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/documents': {
+      id: '/_authenticated/documents'
+      path: '/documents'
+      fullPath: '/documents'
+      preLoaderRoute: typeof AuthenticatedDocumentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/crm': {
+      id: '/_authenticated/crm'
+      path: '/crm'
+      fullPath: '/crm'
+      preLoaderRoute: typeof AuthenticatedCrmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/content': {
+      id: '/_authenticated/content'
+      path: '/content'
+      fullPath: '/content'
+      preLoaderRoute: typeof AuthenticatedContentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/applications': {
+      id: '/_authenticated/applications'
+      path: '/applications'
+      fullPath: '/applications'
+      preLoaderRoute: typeof AuthenticatedApplicationsRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  ApplicationsRoute: ApplicationsRoute,
-  ContentRoute: ContentRoute,
-  CrmRoute: CrmRoute,
-  DocumentsRoute: DocumentsRoute,
-  InvestorRoute: InvestorRoute,
-  MilestonesRoute: MilestonesRoute,
-  PilotsRoute: PilotsRoute,
-  ProductRoute: ProductRoute,
-  ProofRoute: ProofRoute,
-  TasksRoute: TasksRoute,
-  TeamRoute: TeamRoute,
+  AuthenticatedApplicationsRoute: AuthenticatedApplicationsRoute,
+  AuthenticatedContentRoute: AuthenticatedContentRoute,
+  AuthenticatedCrmRoute: AuthenticatedCrmRoute,
+  AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
+  AuthenticatedInvestorRoute: AuthenticatedInvestorRoute,
+  AuthenticatedMilestonesRoute: AuthenticatedMilestonesRoute,
+  AuthenticatedPilotsRoute: AuthenticatedPilotsRoute,
+  AuthenticatedProductRoute: AuthenticatedProductRoute,
+  AuthenticatedProofRoute: AuthenticatedProofRoute,
+  AuthenticatedTasksRoute: AuthenticatedTasksRoute,
+  AuthenticatedTeamRoute: AuthenticatedTeamRoute,
+  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

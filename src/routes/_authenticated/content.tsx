@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { contentPosts } from "@/lib/mock-data";
 import { Plus, TrendingUp } from "lucide-react";
 
-export const Route = createFileRoute("/content")({
+export const Route = createFileRoute("/_authenticated/content")({
   head: () => ({ meta: [{ title: "Content Command Center · Nabhya OS" }, { name: "description", content: "Every post, every platform, every metric." }] }),
   component: Content,
 });

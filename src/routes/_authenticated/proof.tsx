@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Upload, Award, FlaskConical, Newspaper, FileText } from "lucide-react";
 
-export const Route = createFileRoute("/proof")({
+export const Route = createFileRoute("/_authenticated/proof")({
   head: () => ({ meta: [{ title: "Proof Vault · Nabhya OS" }, { name: "description", content: "Evidence: validation, awards, competitions, and media." }] }),
   component: Proof,
 });

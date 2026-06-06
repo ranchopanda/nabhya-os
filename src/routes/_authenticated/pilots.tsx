@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { pilots } from "@/lib/mock-data";
 import { Plus, Target, Calendar } from "lucide-react";
 
-export const Route = createFileRoute("/pilots")({
+export const Route = createFileRoute("/_authenticated/pilots")({
   head: () => ({ meta: [{ title: "Pilot Tracker · Nabhya OS" }, { name: "description", content: "Active and upcoming pilots with KPIs and outcomes." }] }),
   component: Pilots,
 });
