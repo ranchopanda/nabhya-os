@@ -9,29 +9,33 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import type { TeamMember } from "@/lib/queries";
 
-export function TeamMemberDialog({ trigger }: { trigger: ReactNode }) {
+export function TeamMemberDialog({ trigger, member }: { trigger: ReactNode; member?: TeamMember }) {
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [role, setRole] = useState("");
-  const [focus, setFocus] = useState("");
-  const [wins, setWins] = useState("");
-  const [linkedin, setLinkedin] = useState("");
-  const [skills, setSkills] = useState("");
+  const [name, setName] = useState(member?.name ?? "");
+  const [role, setRole] = useState(member?.role ?? "");
+  const [focus, setFocus] = useState(member?.current_focus ?? "");
+  const [wins, setWins] = useState(member?.wins_this_month ?? "");
+  const [linkedin, setLinkedin] = useState(member?.linkedin ?? "");
+  const [skills, setSkills] = useState(member?.skills ?? "");
   const qc = useQueryClient();
   const mut = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("team_members").insert({
+      const payload = {
         name, role: role || null, current_focus: focus || null,
         wins_this_month: wins || null, linkedin: linkedin || null, skills: skills || null,
-      });
+      };
+      const { error } = member
+        ? await supabase.from("team_members").update(payload).eq("id", member.id)
+        : await supabase.from("team_members").insert(payload);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Team member added");
+      toast.success(member ? "Team member updated" : "Team member added");
       qc.invalidateQueries({ queryKey: ["team_members"] });
       setOpen(false);
-      setName(""); setRole(""); setFocus(""); setWins(""); setLinkedin(""); setSkills("");
+      if (!member) setName(""); setRole(""); setFocus(""); setWins(""); setLinkedin(""); setSkills("");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -41,8 +45,8 @@ export function TeamMemberDialog({ trigger }: { trigger: ReactNode }) {
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add Team Member</DialogTitle>
-          <DialogDescription>Who's on the team and what they're focused on.</DialogDescription>
+          <DialogTitle>{member ? "Edit Team Member" : "Add Team Member"}</DialogTitle>
+          <DialogDescription>{member ? "Update role, focus, wins, or links." : "Who's on the team and what they're focused on."}</DialogDescription>
         </DialogHeader>
         <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (!name.trim()) return; mut.mutate(); }}>
           <div className="grid grid-cols-2 gap-3">
@@ -75,7 +79,7 @@ export function TeamMemberDialog({ trigger }: { trigger: ReactNode }) {
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="submit" disabled={mut.isPending || !name.trim()}>{mut.isPending ? "Saving…" : "Add"}</Button>
+            <Button type="submit" disabled={mut.isPending || !name.trim()}>{mut.isPending ? "Saving…" : member ? "Save" : "Add"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

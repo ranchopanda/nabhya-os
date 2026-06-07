@@ -9,26 +9,30 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import type { Milestone } from "@/lib/queries";
 
-export function MilestoneDialog({ trigger }: { trigger: ReactNode }) {
+export function MilestoneDialog({ trigger, milestone }: { trigger: ReactNode; milestone?: Milestone }) {
   const [open, setOpen] = useState(false);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  const [category, setCategory] = useState("");
+  const [title, setTitle] = useState(milestone?.title ?? "");
+  const [description, setDescription] = useState(milestone?.description ?? "");
+  const [date, setDate] = useState(milestone?.occurred_on ?? new Date().toISOString().slice(0, 10));
+  const [category, setCategory] = useState(milestone?.category ?? "");
   const qc = useQueryClient();
   const mut = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("milestones").insert({
+      const payload = {
         title, description: description || null, occurred_on: date, category: category || null,
-      });
+      };
+      const { error } = milestone
+        ? await supabase.from("milestones").update(payload).eq("id", milestone.id)
+        : await supabase.from("milestones").insert(payload);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Milestone added");
+      toast.success(milestone ? "Milestone updated" : "Milestone added");
       qc.invalidateQueries({ queryKey: ["milestones"] });
       setOpen(false);
-      setTitle(""); setDescription(""); setCategory("");
+      if (!milestone) setTitle(""); setDescription(""); setCategory("");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -38,8 +42,8 @@ export function MilestoneDialog({ trigger }: { trigger: ReactNode }) {
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add Milestone</DialogTitle>
-          <DialogDescription>Record a meaningful moment in Nabhya's story.</DialogDescription>
+          <DialogTitle>{milestone ? "Edit Milestone" : "Add Milestone"}</DialogTitle>
+          <DialogDescription>{milestone ? "Update a moment in Nabhya's story." : "Record a meaningful moment in Nabhya's story."}</DialogDescription>
         </DialogHeader>
         <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (!title.trim()) return; mut.mutate(); }}>
           <div className="space-y-1.5">
@@ -62,7 +66,7 @@ export function MilestoneDialog({ trigger }: { trigger: ReactNode }) {
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="submit" disabled={mut.isPending || !title.trim()}>{mut.isPending ? "Saving…" : "Add"}</Button>
+            <Button type="submit" disabled={mut.isPending || !title.trim()}>{mut.isPending ? "Saving…" : milestone ? "Save" : "Add"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
