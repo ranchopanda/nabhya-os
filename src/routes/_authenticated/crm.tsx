@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LeadDialog } from "@/components/LeadDialog";
+import { DeleteButton } from "@/components/DeleteButton";
 import { leadsQuery, LEAD_STATUSES } from "@/lib/queries";
 import { useCurrentRole } from "@/hooks/use-current-role";
-import { Plus, Search } from "lucide-react";
+import { Edit, Plus, Search } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/crm")({
   head: () => ({ meta: [{ title: "CRM & Lead Pipeline · Nabhya OS" }, { name: "description", content: "Track every organization Nabhya is in conversation with." }] }),
@@ -45,6 +46,7 @@ function CRMPage() {
 
 function CRMContent() {
   const { data: leads } = useSuspenseQuery(leadsQuery);
+  const { canEdit, isFounder } = useCurrentRole();
   const [q, setQ] = useState("");
 
   const filtered = useMemo(() => {
@@ -91,7 +93,7 @@ function CRMContent() {
           <div className="col-span-4">Company</div>
           <div className="col-span-3">Contact</div>
           <div className="col-span-3">Status</div>
-          <div className="col-span-2">Next action</div>
+          <div className="col-span-2">Actions</div>
         </div>
         {filtered.length === 0 ? (
           <div className="px-5 py-12 text-center text-sm text-muted-foreground">
@@ -105,7 +107,10 @@ function CRMContent() {
                 {l.contact_name ?? "—"}{l.email ? <span className="block text-xs">{l.email}</span> : null}
               </div>
               <div className="col-span-3"><Badge variant="secondary">{l.status}</Badge></div>
-              <div className="col-span-2 text-sm truncate">{l.next_action ?? "—"}</div>
+              <div className="col-span-2 flex items-center justify-end gap-1">
+                {canEdit ? <LeadDialog lead={l} trigger={<Button size="icon" variant="ghost" aria-label="Edit lead"><Edit className="h-4 w-4" /></Button>} /> : <span className="text-sm text-muted-foreground truncate mr-auto">{l.next_action ?? "—"}</span>}
+                {isFounder ? <DeleteButton table="leads" id={l.id} queryKey={["leads"]} label="lead" /> : null}
+              </div>
             </div>
           ))
         )}

@@ -6,9 +6,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApplicationDialog } from "@/components/ApplicationDialog";
+import { DeleteButton } from "@/components/DeleteButton";
 import { applicationsQuery, APPLICATION_STAGES } from "@/lib/queries";
 import { useCurrentRole } from "@/hooks/use-current-role";
-import { Plus } from "lucide-react";
+import { Edit, Plus } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/applications")({
   head: () => ({ meta: [{ title: "Application Tracker · Nabhya OS" }, { name: "description", content: "Incubators, grants, competitions and accelerators." }] }),
@@ -47,6 +48,7 @@ function AppsPage() {
 
 function AppsContent() {
   const { data: apps } = useSuspenseQuery(applicationsQuery);
+  const { canEdit, isFounder } = useCurrentRole();
   const counts = new Map<string, number>();
   for (const a of apps) counts.set(a.stage, (counts.get(a.stage) ?? 0) + 1);
 
@@ -72,7 +74,10 @@ function AppsContent() {
               <span className={`text-xs px-2 py-1 rounded-full ${tone[a.stage] ?? "bg-muted"}`}>{a.stage}</span>
             </div>
             <div className="col-span-2 text-sm text-muted-foreground">{a.date_applied ? `Applied ${a.date_applied}` : "—"}</div>
-            <div className="col-span-2 text-sm text-right truncate">{a.result ?? a.remarks ?? ""}</div>
+            <div className="col-span-2 flex items-center justify-end gap-1">
+              {canEdit ? <ApplicationDialog application={a} trigger={<Button size="icon" variant="ghost" aria-label="Edit application"><Edit className="h-4 w-4" /></Button>} /> : <span className="text-sm truncate">{a.result ?? a.remarks ?? ""}</span>}
+              {isFounder ? <DeleteButton table="applications" id={a.id} queryKey={["applications"]} label="application" /> : null}
+            </div>
           </div>
         ))}
       </Card>
