@@ -35,6 +35,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { isFounder } = useCurrentRole();
   const [me, setMe] = useState<{ name: string; email: string; role: string } | null>(null);
 
   useEffect(() => {
