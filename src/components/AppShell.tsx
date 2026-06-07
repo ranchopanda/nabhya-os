@@ -5,13 +5,14 @@ import logo from "@/assets/nabhya-logo.asset.json";
 import { supabase } from "@/integrations/supabase/client";
 import {
   LayoutDashboard, Users, Rocket, ShieldCheck, Wrench, FileCheck2,
-  Megaphone, UsersRound, FolderKanban, ListTodo, History, Eye, LogOut, Shield
+  Megaphone, UsersRound, FolderKanban, ListTodo, History, Eye, LogOut, Shield, DatabaseZap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCurrentRole } from "@/hooks/use-current-role";
 
 const nav = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/data-entry", label: "Data Entry", icon: DatabaseZap },
   { to: "/crm", label: "CRM Pipeline", icon: Users },
   { to: "/pilots", label: "Pilots", icon: Rocket },
   { to: "/proof", label: "Proof Vault", icon: ShieldCheck },
@@ -35,7 +36,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { isFounder } = useCurrentRole();
+  const { isFounder, role, canEdit, loading } = useCurrentRole();
   const [me, setMe] = useState<{ name: string; email: string; role: string } | null>(null);
 
   useEffect(() => {
@@ -111,9 +112,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
         {me && (
           <div className="m-3 rounded-lg border border-sidebar-border p-3">
-            <div className="text-xs text-sidebar-foreground/60">{roleLabel[me.role] ?? me.role}</div>
+            <div className="text-xs text-sidebar-foreground/60">{loading ? "Checking access" : roleLabel[role ?? me.role] ?? role ?? me.role}</div>
             <div className="text-sm font-medium text-sidebar-foreground truncate">{me.name}</div>
             <div className="text-xs text-sidebar-foreground/60 truncate">{me.email}</div>
+            <div className="text-[11px] text-sidebar-foreground/60 mt-1">{canEdit ? "Can add and edit data" : "Readonly access"}</div>
             <Button size="sm" variant="ghost" className="w-full mt-2 text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent" onClick={signOut}>
               <LogOut className="h-3.5 w-3.5" /> Sign out
             </Button>
