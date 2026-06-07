@@ -94,6 +94,20 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
+          {isFounder && (
+            <Link
+              to="/members"
+              className={[
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                path.startsWith("/members")
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
+                  : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+              ].join(" ")}
+            >
+              <Shield className="h-4 w-4" />
+              Members
+            </Link>
+          )}
         </nav>
         {me && (
           <div className="m-3 rounded-lg border border-sidebar-border p-3">
