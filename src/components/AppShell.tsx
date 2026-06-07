@@ -5,9 +5,10 @@ import logo from "@/assets/nabhya-logo.asset.json";
 import { supabase } from "@/integrations/supabase/client";
 import {
   LayoutDashboard, Users, Rocket, ShieldCheck, Wrench, FileCheck2,
-  Megaphone, UsersRound, FolderKanban, ListTodo, History, Eye, LogOut
+  Megaphone, UsersRound, FolderKanban, ListTodo, History, Eye, LogOut, Shield
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useCurrentRole } from "@/hooks/use-current-role";
 
 const nav = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -34,6 +35,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { isFounder } = useCurrentRole();
   const [me, setMe] = useState<{ name: string; email: string; role: string } | null>(null);
 
   useEffect(() => {
@@ -92,6 +94,20 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
+          {isFounder && (
+            <Link
+              to="/members"
+              className={[
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                path.startsWith("/members")
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium"
+                  : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+              ].join(" ")}
+            >
+              <Shield className="h-4 w-4" />
+              Members
+            </Link>
+          )}
         </nav>
         {me && (
           <div className="m-3 rounded-lg border border-sidebar-border p-3">
