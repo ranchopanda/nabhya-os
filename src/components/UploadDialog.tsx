@@ -10,16 +10,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { PROOF_CATEGORIES, DOCUMENT_CATEGORIES } from "@/lib/queries";
+import { PROOF_CATEGORIES, DOCUMENT_CATEGORIES, type ProofDoc } from "@/lib/queries";
 
 export function UploadDialog({
-  trigger, kind,
-}: { trigger: ReactNode; kind: "vault" | "document" }) {
+  trigger, kind, doc,
+}: { trigger: ReactNode; kind: "vault" | "document"; doc?: ProofDoc }) {
   const [open, setOpen] = useState(false);
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(doc?.title ?? "");
   const categories = kind === "vault" ? PROOF_CATEGORIES : DOCUMENT_CATEGORIES;
-  const [category, setCategory] = useState<string>(categories[0]);
-  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState<string>(doc?.category ?? categories[0]);
+  const [description, setDescription] = useState(doc?.description ?? "");
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const qc = useQueryClient();
@@ -45,17 +45,23 @@ export function UploadDialog({
         mime_type = file.type || null;
         file_type = ext;
       }
-      const { error } = await supabase.from("proof_documents").insert({
+      const payload = {
         title, category, description: description || null, kind,
         file_path, file_size, mime_type, file_type, uploaded_by: user?.id ?? null,
-      });
+      };
+      const updatePayload = file
+        ? payload
+        : { title, category, description: description || null, kind };
+      const { error } = doc
+        ? await supabase.from("proof_documents").update(updatePayload).eq("id", doc.id)
+        : await supabase.from("proof_documents").insert(payload);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success(file ? "File uploaded" : "Entry added");
+      toast.success(doc ? "Entry updated" : file ? "File uploaded" : "Entry added");
       qc.invalidateQueries({ queryKey: ["proof_documents", kind] });
       setOpen(false);
-      setTitle(""); setCategory(categories[0]); setDescription(""); setFile(null);
+      if (!doc) setTitle(""); setCategory(categories[0]); setDescription(""); setFile(null);
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -65,7 +71,7 @@ export function UploadDialog({
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{kind === "vault" ? "Upload Proof" : "Upload Document"}</DialogTitle>
+          <DialogTitle>{doc ? "Edit Entry" : kind === "vault" ? "Upload Proof" : "Upload Document"}</DialogTitle>
           <DialogDescription>
             {kind === "vault" ? "Validation, awards, media — your receipts." : "Internal SOPs, decks, contracts."}
           </DialogDescription>

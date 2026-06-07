@@ -10,30 +10,33 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { CONTENT_PLATFORMS, CONTENT_STATUSES } from "@/lib/queries";
+import { CONTENT_PLATFORMS, CONTENT_STATUSES, type ContentPost } from "@/lib/queries";
 
-export function ContentDialog({ trigger }: { trigger: ReactNode }) {
+export function ContentDialog({ trigger, post }: { trigger: ReactNode; post?: ContentPost }) {
   const [open, setOpen] = useState(false);
-  const [platform, setPlatform] = useState<string>("LinkedIn");
-  const [topic, setTopic] = useState("");
-  const [format, setFormat] = useState("");
-  const [status, setStatus] = useState<string>("Idea");
-  const [date, setDate] = useState("");
-  const [reach, setReach] = useState("");
+  const [platform, setPlatform] = useState<string>(post?.platform ?? "LinkedIn");
+  const [topic, setTopic] = useState(post?.topic ?? "");
+  const [format, setFormat] = useState(post?.format ?? "");
+  const [status, setStatus] = useState<string>(post?.status ?? "Idea");
+  const [date, setDate] = useState(post?.publish_date ?? "");
+  const [reach, setReach] = useState(post?.reach == null ? "" : String(post.reach));
   const qc = useQueryClient();
   const mut = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("content_posts").insert({
+      const payload = {
         platform, topic, format: format || null, status,
         publish_date: date || null, reach: reach ? Number(reach) : 0,
-      });
+      };
+      const { error } = post
+        ? await supabase.from("content_posts").update(payload).eq("id", post.id)
+        : await supabase.from("content_posts").insert(payload);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Post added");
+      toast.success(post ? "Post updated" : "Post added");
       qc.invalidateQueries({ queryKey: ["content_posts"] });
       setOpen(false);
-      setPlatform("LinkedIn"); setTopic(""); setFormat(""); setStatus("Idea"); setDate(""); setReach("");
+      if (!post) setPlatform("LinkedIn"); setTopic(""); setFormat(""); setStatus("Idea"); setDate(""); setReach("");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -43,8 +46,8 @@ export function ContentDialog({ trigger }: { trigger: ReactNode }) {
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>New Content Post</DialogTitle>
-          <DialogDescription>Plan or log a piece of content.</DialogDescription>
+          <DialogTitle>{post ? "Edit Content Post" : "New Content Post"}</DialogTitle>
+          <DialogDescription>{post ? "Update status or metrics." : "Plan or log a piece of content."}</DialogDescription>
         </DialogHeader>
         <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (!topic.trim()) return; mut.mutate(); }}>
           <div className="grid grid-cols-2 gap-3">
@@ -83,7 +86,7 @@ export function ContentDialog({ trigger }: { trigger: ReactNode }) {
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="submit" disabled={mut.isPending || !topic.trim()}>{mut.isPending ? "Saving…" : "Add"}</Button>
+            <Button type="submit" disabled={mut.isPending || !topic.trim()}>{mut.isPending ? "Saving…" : post ? "Save" : "Add"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

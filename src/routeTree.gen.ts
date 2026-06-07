@@ -21,6 +21,7 @@ import { Route as AuthenticatedMilestonesRouteImport } from './routes/_authentic
 import { Route as AuthenticatedMembersRouteImport } from './routes/_authenticated/members'
 import { Route as AuthenticatedInvestorRouteImport } from './routes/_authenticated/investor'
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
+import { Route as AuthenticatedDataEntryRouteImport } from './routes/_authenticated/data-entry'
 import { Route as AuthenticatedCrmRouteImport } from './routes/_authenticated/crm'
 import { Route as AuthenticatedContentRouteImport } from './routes/_authenticated/content'
 import { Route as AuthenticatedApplicationsRouteImport } from './routes/_authenticated/applications'
@@ -84,6 +85,11 @@ const AuthenticatedDocumentsRoute = AuthenticatedDocumentsRouteImport.update({
   path: '/documents',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDataEntryRoute = AuthenticatedDataEntryRouteImport.update({
+  id: '/data-entry',
+  path: '/data-entry',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedCrmRoute = AuthenticatedCrmRouteImport.update({
   id: '/crm',
   path: '/crm',
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/applications': typeof AuthenticatedApplicationsRoute
   '/content': typeof AuthenticatedContentRoute
   '/crm': typeof AuthenticatedCrmRoute
+  '/data-entry': typeof AuthenticatedDataEntryRoute
   '/documents': typeof AuthenticatedDocumentsRoute
   '/investor': typeof AuthenticatedInvestorRoute
   '/members': typeof AuthenticatedMembersRoute
@@ -122,6 +129,7 @@ export interface FileRoutesByTo {
   '/applications': typeof AuthenticatedApplicationsRoute
   '/content': typeof AuthenticatedContentRoute
   '/crm': typeof AuthenticatedCrmRoute
+  '/data-entry': typeof AuthenticatedDataEntryRoute
   '/documents': typeof AuthenticatedDocumentsRoute
   '/investor': typeof AuthenticatedInvestorRoute
   '/members': typeof AuthenticatedMembersRoute
@@ -140,6 +148,7 @@ export interface FileRoutesById {
   '/_authenticated/applications': typeof AuthenticatedApplicationsRoute
   '/_authenticated/content': typeof AuthenticatedContentRoute
   '/_authenticated/crm': typeof AuthenticatedCrmRoute
+  '/_authenticated/data-entry': typeof AuthenticatedDataEntryRoute
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
   '/_authenticated/investor': typeof AuthenticatedInvestorRoute
   '/_authenticated/members': typeof AuthenticatedMembersRoute
@@ -159,6 +168,7 @@ export interface FileRouteTypes {
     | '/applications'
     | '/content'
     | '/crm'
+    | '/data-entry'
     | '/documents'
     | '/investor'
     | '/members'
@@ -174,6 +184,7 @@ export interface FileRouteTypes {
     | '/applications'
     | '/content'
     | '/crm'
+    | '/data-entry'
     | '/documents'
     | '/investor'
     | '/members'
@@ -191,6 +202,7 @@ export interface FileRouteTypes {
     | '/_authenticated/applications'
     | '/_authenticated/content'
     | '/_authenticated/crm'
+    | '/_authenticated/data-entry'
     | '/_authenticated/documents'
     | '/_authenticated/investor'
     | '/_authenticated/members'
@@ -294,6 +306,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDocumentsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/data-entry': {
+      id: '/_authenticated/data-entry'
+      path: '/data-entry'
+      fullPath: '/data-entry'
+      preLoaderRoute: typeof AuthenticatedDataEntryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/crm': {
       id: '/_authenticated/crm'
       path: '/crm'
@@ -322,6 +341,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedApplicationsRoute: typeof AuthenticatedApplicationsRoute
   AuthenticatedContentRoute: typeof AuthenticatedContentRoute
   AuthenticatedCrmRoute: typeof AuthenticatedCrmRoute
+  AuthenticatedDataEntryRoute: typeof AuthenticatedDataEntryRoute
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
   AuthenticatedInvestorRoute: typeof AuthenticatedInvestorRoute
   AuthenticatedMembersRoute: typeof AuthenticatedMembersRoute
@@ -338,6 +358,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedApplicationsRoute: AuthenticatedApplicationsRoute,
   AuthenticatedContentRoute: AuthenticatedContentRoute,
   AuthenticatedCrmRoute: AuthenticatedCrmRoute,
+  AuthenticatedDataEntryRoute: AuthenticatedDataEntryRoute,
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
   AuthenticatedInvestorRoute: AuthenticatedInvestorRoute,
   AuthenticatedMembersRoute: AuthenticatedMembersRoute,

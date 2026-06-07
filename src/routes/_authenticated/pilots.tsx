@@ -7,9 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PilotDialog } from "@/components/PilotDialog";
+import { DeleteButton } from "@/components/DeleteButton";
 import { pilotsQuery } from "@/lib/queries";
 import { useCurrentRole } from "@/hooks/use-current-role";
-import { Plus, Target, Calendar } from "lucide-react";
+import { Edit, Plus, Target, Calendar } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/pilots")({
   head: () => ({ meta: [{ title: "Pilot Tracker · Nabhya OS" }, { name: "description", content: "Active and upcoming pilots with KPIs and outcomes." }] }),
@@ -44,6 +45,7 @@ function PilotsPage() {
 
 function PilotsContent() {
   const { data: pilots } = useSuspenseQuery(pilotsQuery);
+  const { canEdit, isFounder } = useCurrentRole();
 
   if (pilots.length === 0) {
     return (
@@ -63,7 +65,11 @@ function PilotsContent() {
               <h3 className="font-display text-lg font-semibold truncate">{p.name}</h3>
               <div className="text-sm text-muted-foreground truncate">{p.organization ?? "—"}</div>
             </div>
-            <Badge variant={p.status === "Running" ? "default" : "secondary"}>{p.status}</Badge>
+            <div className="flex items-center gap-1">
+              <Badge variant={p.status === "Running" ? "default" : "secondary"}>{p.status}</Badge>
+              {canEdit ? <PilotDialog pilot={p} trigger={<Button size="icon" variant="ghost" aria-label="Edit pilot"><Edit className="h-4 w-4" /></Button>} /> : null}
+              {isFounder ? <DeleteButton table="pilots" id={p.id} queryKey={["pilots"]} label="pilot" /> : null}
+            </div>
           </div>
           <div className="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1.5">

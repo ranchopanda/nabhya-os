@@ -9,30 +9,34 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import type { ProductUpdate } from "@/lib/queries";
 
-export function ProductUpdateDialog({ trigger }: { trigger: ReactNode }) {
+export function ProductUpdateDialog({ trigger, update }: { trigger: ReactNode; update?: ProductUpdate }) {
   const [open, setOpen] = useState(false);
-  const [feature, setFeature] = useState("");
-  const [description, setDescription] = useState("");
-  const [problem, setProblem] = useState("");
-  const [impact, setImpact] = useState("");
-  const [category, setCategory] = useState("");
-  const [owner, setOwner] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [feature, setFeature] = useState(update?.feature ?? "");
+  const [description, setDescription] = useState(update?.description ?? "");
+  const [problem, setProblem] = useState(update?.problem_solved ?? "");
+  const [impact, setImpact] = useState(update?.impact ?? "");
+  const [category, setCategory] = useState(update?.category ?? "");
+  const [owner, setOwner] = useState(update?.owner_name ?? "");
+  const [date, setDate] = useState(update?.occurred_on ?? new Date().toISOString().slice(0, 10));
   const qc = useQueryClient();
   const mut = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("product_updates").insert({
+      const payload = {
         feature, description: description || null, problem_solved: problem || null,
         impact: impact || null, category: category || null, owner_name: owner || null, occurred_on: date,
-      });
+      };
+      const { error } = update
+        ? await supabase.from("product_updates").update(payload).eq("id", update.id)
+        : await supabase.from("product_updates").insert(payload);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Update logged");
+      toast.success(update ? "Update saved" : "Update logged");
       qc.invalidateQueries({ queryKey: ["product_updates"] });
       setOpen(false);
-      setFeature(""); setDescription(""); setProblem(""); setImpact(""); setCategory(""); setOwner("");
+      if (!update) setFeature(""); setDescription(""); setProblem(""); setImpact(""); setCategory(""); setOwner("");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -42,8 +46,8 @@ export function ProductUpdateDialog({ trigger }: { trigger: ReactNode }) {
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Log Product Update</DialogTitle>
-          <DialogDescription>What did we ship and why does it matter?</DialogDescription>
+          <DialogTitle>{update ? "Edit Product Update" : "Log Product Update"}</DialogTitle>
+          <DialogDescription>{update ? "Update what shipped and why it matters." : "What did we ship and why does it matter?"}</DialogDescription>
         </DialogHeader>
         <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (!feature.trim()) return; mut.mutate(); }}>
           <div className="space-y-1.5">
@@ -78,7 +82,7 @@ export function ProductUpdateDialog({ trigger }: { trigger: ReactNode }) {
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="submit" disabled={mut.isPending || !feature.trim()}>{mut.isPending ? "Saving…" : "Log"}</Button>
+            <Button type="submit" disabled={mut.isPending || !feature.trim()}>{mut.isPending ? "Saving…" : update ? "Save" : "Log"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -1,75 +1,85 @@
-## Goal
-Replace every remaining `mock-data.ts` reference with live Supabase data and add the create/edit flows your team needs to actually use the system day-to-day.
+You’re right: the app has database tables and some add dialogs, but it is not yet a coherent internal product. The biggest actual break I found is that your logged-in account has no `profile` and no `role`, so the app treats you like an investor/readonly user. That hides most “Add / Upload / Manage” actions, making it feel like there is no way to feed data.
 
-## Current state
-- ✅ Live: Dashboard, CRM, Pilots
-- ❌ Still mock: Applications, Content, Milestones, Product Log, Team HQ, Investor Room
-- ❌ No upload pipeline: Proof Vault, Documents
-- ❌ Read-only scaffolds: Tasks (no kanban write-back)
-- ❌ No team management: can't invite teammates or assign roles
+## What I will fix
 
-## Plan
+### 1. Repair account onboarding and roles
+- Add a safe backend repair migration that backfills missing `profiles` and `user_roles` for existing signed-in users.
+- Make sure there is always at least one `founder` admin.
+- Keep roles in `user_roles` only, not profiles.
+- Confirm the signup trigger creates profile + role for future users.
 
-### 1. Extend `src/lib/queries.ts` with the missing query options
-Add `queryOptions` + types for: `applications`, `content_posts`, `tasks`, `team_members`, `proof_documents`, `profiles+user_roles` (members list).
+### 2. Add a real “Data Entry” command center
+Create a clear page where the team can add all operational data from one place:
 
-### 2. Wire the 6 remaining module pages to live queries
-For each: loader primes cache → `useSuspenseQuery` → empty states → search/filter where useful.
-- **Applications** (`/applications`) — table grouped by stage, count per stage
-- **Product Log** (`/product`) — timeline of `product_updates`
-- **Content** (`/content`) — table of posts with platform/status badges and reach/likes
-- **Milestones** (`/milestones`) — vertical timeline ordered by `occurred_on`
-- **Team HQ** (`/team`) — cards from `team_members`
-- **Investor Room** (`/investor`) — read-only roll-up: health metrics + active pilots + milestones + recent wins (reuse Dashboard queries)
+```text
+Data Entry
+- Add Lead
+- Add Pilot
+- Add Application
+- Log Product Update
+- Add Milestone
+- Add Content Post
+- Add Team Member
+- Add Task
+- Upload Proof
+- Upload Document
+```
 
-### 3. Add CRUD dialogs (Founder/Team gated via `useCurrentRole`)
-Reuse the `LeadDialog` / `PilotDialog` pattern:
-- `ApplicationDialog`, `ContentDialog`, `MilestoneDialog`, `ProductUpdateDialog`, `TeamMemberDialog`, `TaskDialog`
-- Each: shadcn `Dialog` + `react-hook-form` (or simple `useState`) + `useMutation` → invalidate query.
-- Add inline edit/delete on row hover (founders only for delete) using a small `RowActions` component.
+This makes the app understandable: users do not need to hunt across scattered modules to know where data goes.
 
-### 4. Tasks Kanban with write-back (`/tasks`)
-- Columns: Backlog → In Progress → Review → Done
-- Drag-and-drop status update via `@dnd-kit/core` (already common, will install if missing) — on drop, optimistic mutation updates `tasks.status`.
-- "New task" dialog with assignee picker (from `profiles`).
+### 3. Make module pages actionable, not just displays
+For each module page, keep the existing live database reads, but add obvious empty states and actions:
+- CRM: add lead, edit status/details
+- Pilots: add pilot, update progress/status
+- Applications: add application, update stage/result
+- Product Log: log product update
+- Content: add content post, update status/metrics
+- Team HQ: add team member
+- Tasks: add task, move status
+- Milestones: add milestone
+- Proof Vault / Documents: upload file + metadata
 
-### 5. Proof Vault + Documents file uploads
-- Create Supabase Storage bucket `proof-vault` (private, RLS: authenticated read, editors write, founders delete).
-- New `UploadDialog` component → `supabase.storage.from(...).upload()` → insert row into `proof_documents` with `file_path`.
-- File list with signed-URL download links and category filter (Validation / Award / Media / Press).
-- Documents page reuses the same upload + a `documents` table (will add via migration if you want a separate bucket, or fold into proof_documents with a `kind` field — recommend keeping them separate so Documents covers internal SOPs/decks while Proof Vault stays external-facing).
+### 4. Fix create/update/delete completeness
+Most dialogs only do “create”. I’ll add the missing edit/delete flows so data can be maintained after entry:
+- Reuse each dialog for create and edit where possible.
+- Add row/card actions: Edit, Delete where roles allow it.
+- Delete remains founder-only according to existing backend policy.
 
-### 6. Members & roles management (founder-only)
-- New `/members` route (founder-only `beforeLoad` gate).
-- Lists `profiles` joined with `user_roles`; founder can change role between `founder` / `team` / `investor` and revoke.
-- "Invite teammate" → sends magic-link via `supabase.auth.admin.inviteUserByEmail` from a `createServerFn` using `supabaseAdmin` (so we don't expose service role).
+### 5. Make permissions visible instead of confusing
+Right now if a user lacks role data, buttons simply disappear. I’ll change that to:
+- Show user role clearly in the shell.
+- Show a “Readonly / ask founder for edit access” state when not editable.
+- If the current user is the only/no admin case, repair it through the backend migration.
+- Show Members in navigation for founders.
 
-### 7. Dashboard polish
-- Wire `weeklyProgress.tasksCompleted` once Tasks is live.
-- Add real "Awards Won" count (filter `proof_documents` by `category = 'Award'`).
-- Add quick-add buttons in header that open the new dialogs (Lead / Application / Proof / Product Update / Content).
+### 6. Connect dashboard metrics to every live source
+The dashboard currently uses live data but misses some sources. I’ll wire it to:
+- leads
+- pilots
+- applications
+- product updates
+- tasks
+- proof documents
+- milestones
 
-### 8. Migration touch-ups
-One small migration to add:
-- `tasks.position` (int) for stable Kanban ordering
-- `proof_documents.file_size`, `proof_documents.mime_type`
-- Optional `documents` table if we keep them split
-- Storage bucket + policies for `proof-vault`
+So the dashboard becomes a real roll-up of the internal product, not a separate static view.
 
-### 9. Cleanup
-Delete `src/lib/mock-data.ts` once nothing imports it.
+### 7. Clean navigation and language
+- Add “Data Entry” to the sidebar.
+- Rename/organize module labels so the workflow is clear.
+- Improve empty states to say exactly what data belongs there and provide the correct action button.
+
+### 8. Validate with real signals
+After implementing, I’ll verify:
+- no stale `mock-data` imports remain
+- account role/profile requests return data
+- create buttons appear for founder/team users
+- forms insert records into the backend
+- dashboard updates from live records
+- no runtime/server errors appear in preview logs
 
 ## Technical notes
-- All reads via TanStack Query (`ensureQueryData` + `useSuspenseQuery`) following the pattern already in `index.tsx` / `crm.tsx` / `pilots.tsx`.
-- All writes via `supabase.from(...).insert/update/delete` inside `useMutation`, with `queryClient.invalidateQueries({ queryKey: [...] })` on success.
-- Role gating uses the existing `useCurrentRole` hook (`canEdit`, `isFounder`).
-- No new server functions needed except the invite endpoint (uses `supabaseAdmin`, must be `*.functions.ts` with admin import inside the handler).
-
-## What I'd like to confirm before building
-
-1. **Documents vs Proof Vault** — keep as two separate tables/buckets (Documents = internal SOPs/decks, Proof Vault = external validation), or merge into one with a category filter?
-2. **Tasks DnD** — OK to add `@dnd-kit/core` (~30 KB) for the Kanban, or prefer a simpler status-select dropdown per card?
-3. **Invites** — magic-link email via Supabase admin invite (requires email setup), or just a "share signup link, first roles default to Team" flow? The latter ships faster.
-4. **Scope cut** — if you want to ship sooner, the must-haves for v1 internal are: Applications, Product Log, Milestones, Team HQ + Proof Vault uploads + Members. Content, Tasks DnD, and Investor Room polish could be a fast follow-up.
-
-Reply with answers (or "all defaults: separate, dnd-kit, share-link, full scope") and I'll execute.
+- Backend is already present through Lovable Cloud: tables, RLS policies, storage bucket, auth, and roles exist.
+- The app is broken mainly because the current user has no role/profile rows, and the frontend hides write actions based on that role.
+- I will use a migration for the role/profile repair and keep the app using the existing client + RLS pattern for normal CRUD.
+- I will not use mock data again.
