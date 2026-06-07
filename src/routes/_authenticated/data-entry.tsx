@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { ApplicationDialog } from "@/components/ApplicationDialog";
 import { ContentDialog } from "@/components/ContentDialog";
@@ -97,7 +97,7 @@ function DataEntryPage() {
                 <div className="mt-auto flex gap-2">
                   {canEdit ? action.dialog(<Button size="sm"><Plus className="h-4 w-4" /> Add</Button>) : <Button size="sm" disabled><Plus className="h-4 w-4" /> Add</Button>}
                   <Button size="sm" variant="outline" asChild>
-                    <Link to={action.to}>View module</Link>
+                    <a href={action.to}>View module</a>
                   </Button>
                 </div>
               </Card>
