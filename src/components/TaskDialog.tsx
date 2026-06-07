@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { TASK_STATUSES, type Task } from "@/lib/queries";
+import { type Task, teamMembersQuery, logActivity, TASK_STATUSES } from "@/lib/queries";
 
 export function TaskDialog({ trigger, task, defaultStatus = "Backlog" }: { trigger: ReactNode; task?: Task; defaultStatus?: string }) {
   const [open, setOpen] = useState(false);
@@ -18,22 +18,29 @@ export function TaskDialog({ trigger, task, defaultStatus = "Backlog" }: { trigg
   const [description, setDescription] = useState(task?.description ?? "");
   const [status, setStatus] = useState<string>(task?.status ?? defaultStatus);
   const [due, setDue] = useState(task?.due_date ?? "");
+  const [assigneeId, setAssigneeId] = useState<string>(task?.assignee_id ?? "");
+  const { data: teamMembers = [] } = useQuery(teamMembersQuery);
   const qc = useQueryClient();
   const mut = useMutation({
     mutationFn: async () => {
       const payload = {
         title, description: description || null, status, due_date: due || null,
+        assignee_id: assigneeId || null,
       };
       const { error } = task
         ? await supabase.from("tasks").update(payload).eq("id", task.id)
         : await supabase.from("tasks").insert(payload);
       if (error) throw error;
+      logActivity("Tasks", !task ? "Created task" : "Updated task", title);
     },
     onSuccess: () => {
       toast.success(task ? "Task updated" : "Task added");
       qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["activity_log"] });
       setOpen(false);
-      if (!task) setTitle(""); setDescription(""); setStatus(defaultStatus); setDue("");
+      if (!task) {
+        setTitle(""); setDescription(""); setStatus(defaultStatus); setDue(""); setAssigneeId("");
+      }
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -67,6 +74,16 @@ export function TaskDialog({ trigger, task, defaultStatus = "Backlog" }: { trigg
               <Label htmlFor="tdue">Due date</Label>
               <Input id="tdue" type="date" value={due} onChange={(e) => setDue(e.target.value)} />
             </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Assignee</Label>
+            <Select value={assigneeId || "unassigned"} onValueChange={(v) => setAssigneeId(v === "unassigned" ? "" : v)}>
+              <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="unassigned">Unassigned</SelectItem>
+                {teamMembers.map((m) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>

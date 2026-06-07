@@ -7,28 +7,63 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TaskDialog } from "@/components/TaskDialog";
-import { tasksQuery, TASK_STATUSES, type Task } from "@/lib/queries";
+import { tasksQuery, teamMembersQuery, TASK_STATUSES, type Task } from "@/lib/queries";
 import { useCurrentRole } from "@/hooks/use-current-role";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Download, Plus } from "lucide-react";
+import { exportToCSV } from "@/lib/export";
+import { formatDistanceToNow } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/tasks")({
   head: () => ({ meta: [{ title: "Tasks · Nabhya OS" }, { name: "description", content: "Kanban for the Nabhya team." }] }),
-  loader: ({ context }) => { context.queryClient.ensureQueryData(tasksQuery); },
+  loader: ({ context }) => { 
+    context.queryClient.ensureQueryData(tasksQuery);
+    context.queryClient.ensureQueryData(teamMembersQuery);
+  },
   component: TasksPage,
   errorComponent: ({ error }) => <AppShell><div className="p-10 text-sm text-destructive">Failed: {error.message}</div></AppShell>,
   notFoundComponent: () => <AppShell><div className="p-10">Not found</div></AppShell>,
 });
 
 function TasksPage() {
-  const { canEdit } = useCurrentRole();
+  const { canEdit, isFounder } = useCurrentRole();
+  const { data: tasks } = useSuspenseQuery(tasksQuery);
+  const { data: teamMembers } = useSuspenseQuery(teamMembersQuery);
+
+  const lastUpdated = tasks.length > 0 ? formatDistanceToNow(new Date(tasks[0].updated_at || tasks[0].created_at)) + " ago" : null;
+
+  const handleExport = () => {
+    const teamMap = new Map(teamMembers.map(m => [m.id, m.name]));
+    const exportData = tasks.map(t => ({
+      ...t,
+      assignee_name: t.assignee_id ? teamMap.get(t.assignee_id) : "Unassigned"
+    }));
+    exportToCSV("nabhya_tasks", exportData, [
+      { header: "Title", key: "title" },
+      { header: "Description", key: "description" },
+      { header: "Status", key: "status" },
+      { header: "Assignee", key: "assignee_name" },
+      { header: "Due Date", key: "due_date" },
+    ]);
+  };
+
   return (
     <AppShell>
       <div className="px-6 lg:px-10 py-8 max-w-[1400px] mx-auto">
         <PageHeader
           eyebrow="Module 10" title="Tasks" description="A simple Kanban — backlog to done."
-          action={canEdit ? <TaskDialog trigger={<Button size="sm"><Plus className="h-4 w-4" /> New Task</Button>} /> : undefined}
+          lastUpdated={lastUpdated}
+          action={
+            <div className="flex gap-2">
+              {isFounder && (
+                <Button variant="outline" size="sm" onClick={handleExport} className="gap-2">
+                  <Download className="h-4 w-4" /> Export CSV
+                </Button>
+              )}
+              {canEdit ? <TaskDialog trigger={<Button size="sm"><Plus className="h-4 w-4" /> New Task</Button>} /> : null}
+            </div>
+          }
         />
         <Suspense fallback={<Skeleton className="h-96" />}>
           <Board canEdit={canEdit} />
@@ -40,6 +75,7 @@ function TasksPage() {
 
 function Board({ canEdit }: { canEdit: boolean }) {
   const { data: tasks } = useSuspenseQuery(tasksQuery);
+  const { data: teamMembers } = useSuspenseQuery(teamMembersQuery);
   const qc = useQueryClient();
   const update = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
@@ -57,6 +93,8 @@ function Board({ canEdit }: { canEdit: boolean }) {
     byStatus.get(t.status)!.push(t);
   }
 
+  const teamMap = new Map(teamMembers.map(m => [m.id, m]));
+
   return (
     <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
       {TASK_STATUSES.map((col) => {
@@ -72,6 +110,11 @@ function Board({ canEdit }: { canEdit: boolean }) {
                 <Card key={t.id} className="p-3 text-sm">
                   <div className="font-medium">{t.title}</div>
                   {t.description && <div className="text-xs text-muted-foreground mt-1 line-clamp-2">{t.description}</div>}
+                  {t.assignee_id && teamMap.has(t.assignee_id) && (
+                    <div className="mt-2 text-xs font-medium bg-secondary/50 text-secondary-foreground px-2 py-0.5 rounded-full inline-block">
+                      {teamMap.get(t.assignee_id)!.name}
+                    </div>
+                  )}
                   <div className="flex items-center justify-between mt-2 gap-2">
                     {t.due_date && <span className="text-[10px] text-muted-foreground">{t.due_date}</span>}
                     {canEdit && (

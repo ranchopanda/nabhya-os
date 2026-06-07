@@ -1,5 +1,6 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import * as DEMO from "./demo-data";
 
 export type Lead = {
   id: string;
@@ -15,6 +16,22 @@ export type Lead = {
   follow_up_date: string | null;
   created_at: string;
   updated_at: string;
+};
+
+export type LeadActivity = {
+  id: string;
+  lead_id: string;
+  actor_name: string | null;
+  action: string;
+  detail: string | null;
+  created_at: string;
+};
+
+export type LinkedinSnapshot = {
+  id: string;
+  follower_count: number;
+  occurred_on: string;
+  created_at: string;
 };
 
 export type Pilot = {
@@ -121,6 +138,16 @@ export type MemberProfile = {
   roles: string[];
 };
 
+export type ActivityLog = {
+  id: string;
+  actor_name: string | null;
+  module: string;
+  action: string;
+  entity_name: string | null;
+  detail: any | null;
+  created_at: string;
+};
+
 export const leadsQuery = queryOptions({
   queryKey: ["leads"],
   queryFn: async (): Promise<Lead[]> => {
@@ -172,6 +199,18 @@ export const contentPostsQuery = queryOptions({
     const { data, error } = await supabase.from("content_posts").select("*").order("updated_at", { ascending: false });
     if (error) throw error;
     return (data ?? []) as ContentPost[];
+  },
+});
+
+export const linkedinSnapshotsQuery = queryOptions({
+  queryKey: ["linkedin_snapshots"],
+  queryFn: async (): Promise<LinkedinSnapshot[]> => {
+    const { data, error } = await supabase.from("linkedin_snapshots" as any).select("*").order("occurred_on", { ascending: false });
+    if (error) {
+      console.warn("linkedin_snapshots table may not exist yet.", error);
+      return [];
+    }
+    return (data ?? []) as LinkedinSnapshot[];
   },
 });
 
@@ -227,12 +266,41 @@ export const membersQuery = queryOptions({
   },
 });
 
+export const activityLogQuery = queryOptions({
+  queryKey: ["activity_log"],
+  queryFn: async (): Promise<ActivityLog[]> => {
+    const { data, error } = await supabase.from("activity_log" as any).select("*").order("created_at", { ascending: false }).limit(200);
+    if (error) {
+      console.warn("activity_log table may not exist yet.", error);
+      return [];
+    }
+    return (data ?? []) as ActivityLog[];
+  },
+});
+
+export async function logActivity(module: string, action: string, entityName?: string | null, detail?: any) {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    const actorName = user?.email?.split("@")[0] ?? "System";
+    await supabase.from("activity_log" as any).insert({
+      actor_name: actorName,
+      module,
+      action,
+      entity_name: entityName || null,
+      detail: detail || null
+    });
+  } catch (err) {
+    console.error("Failed to log activity", err);
+  }
+}
+
 const WARM_STATUSES = new Set(["Replied", "Meeting Scheduled", "Pilot Discussion"]);
 
 export function computeHealthMetrics(
   leads: Lead[],
   pilots: Pilot[],
   applications: Application[],
+  linkedinSnapshots: LinkedinSnapshot[] = [],
   proofDocs: ProofDoc[] = [],
 ) {
   const warm = leads.filter((l) => WARM_STATUSES.has(l.status)).length;
@@ -241,6 +309,7 @@ export function computeHealthMetrics(
   const customers = leads.filter((l) => l.status === "Customer").length;
   const submitted = applications.filter((a) => a.stage !== "Researching" && a.stage !== "Idea").length;
   const awards = proofDocs.filter((d) => d.category === "Award" || d.category === "Awards").length;
+  const latestLi = linkedinSnapshots[0]?.follower_count ?? 0;
 
   return [
     { label: "Total Leads", value: leads.length, delta: `${warm} warm`, tone: "green" as const },
@@ -250,7 +319,7 @@ export function computeHealthMetrics(
     { label: "Paying Customers", value: customers, delta: customers ? "active" : "First in Q3", tone: "red" as const },
     { label: "Applications Submitted", value: submitted, delta: `${applications.length} tracked`, tone: "lime" as const },
     { label: "Awards Won", value: awards, delta: awards ? "validated" : "—", tone: "yellow" as const },
-    { label: "Active Pipeline", value: leads.length - customers, delta: "in funnel", tone: "green" as const },
+    { label: "LinkedIn Followers", value: latestLi.toLocaleString(), delta: "Growth", tone: "green" as const },
   ];
 }
 

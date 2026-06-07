@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { PILOT_STATUSES, type Pilot } from "@/lib/queries";
+import { type Pilot, logActivity, PILOT_STATUSES } from "@/lib/queries";
 
 export function PilotDialog({ trigger, pilot }: { trigger: ReactNode; pilot?: Pilot }) {
   const [open, setOpen] = useState(false);
@@ -37,10 +37,12 @@ export function PilotDialog({ trigger, pilot }: { trigger: ReactNode; pilot?: Pi
         ? await supabase.from("pilots").update(payload).eq("id", pilot.id)
         : await supabase.from("pilots").insert(payload);
       if (error) throw error;
+      logActivity("Pilots", !pilot ? "Created pilot" : "Updated pilot", name);
     },
     onSuccess: () => {
-      toast.success(pilot ? "Pilot updated" : "Pilot added");
+      toast.success(pilot ? "Pilot updated" : "Pilot created");
       qc.invalidateQueries({ queryKey: ["pilots"] });
+      qc.invalidateQueries({ queryKey: ["activity_log"] });
       setOpen(false);
       if (!pilot) setName(""); setOrg(""); setStatus("Proposed"); setEndDate(""); setProgress("0"); setObjectives(""); setKpis("");
     },

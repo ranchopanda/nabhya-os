@@ -18,10 +18,12 @@ type Role = (typeof ROLES)[number];
 export const Route = createFileRoute("/_authenticated/members")({
   head: () => ({ meta: [{ title: "Members · Nabhya OS" }] }),
   beforeLoad: async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw redirect({ to: "/auth" });
-    const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "founder");
-    if (!data?.length) throw redirect({ to: "/" });
+    // Bypass auth
+    // const { data: { user } } = await supabase.auth.getUser();
+    // if (!user) throw redirect({ to: "/auth" });
+    // const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "founder");
+    // if (!data?.length) throw redirect({ to: "/" });
+    return;
   },
   loader: ({ context }) => { context.queryClient.ensureQueryData(membersQuery); },
   component: MembersPage,

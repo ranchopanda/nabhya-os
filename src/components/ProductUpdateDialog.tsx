@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import type { ProductUpdate } from "@/lib/queries";
+import { type ProductUpdate, logActivity } from "@/lib/queries";
 
 export function ProductUpdateDialog({ trigger, update }: { trigger: ReactNode; update?: ProductUpdate }) {
   const [open, setOpen] = useState(false);
@@ -31,10 +31,12 @@ export function ProductUpdateDialog({ trigger, update }: { trigger: ReactNode; u
         ? await supabase.from("product_updates").update(payload).eq("id", update.id)
         : await supabase.from("product_updates").insert(payload);
       if (error) throw error;
+      logActivity("Product", !update ? "Logged product update" : "Edited product update", feature);
     },
     onSuccess: () => {
       toast.success(update ? "Update saved" : "Update logged");
       qc.invalidateQueries({ queryKey: ["product_updates"] });
+      qc.invalidateQueries({ queryKey: ["activity_log"] });
       setOpen(false);
       if (!update) setFeature(""); setDescription(""); setProblem(""); setImpact(""); setCategory(""); setOwner("");
     },

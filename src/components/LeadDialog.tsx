@@ -12,15 +12,20 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { LEAD_STATUSES, type Lead } from "@/lib/queries";
+import { LEAD_STATUSES, logActivity, type Lead } from "@/lib/queries";
+import { LeadActivityPanel } from "./LeadActivityPanel";
 
 export function LeadDialog({ trigger, lead }: { trigger: ReactNode; lead?: Lead }) {
   const [open, setOpen] = useState(false);
   const [company, setCompany] = useState(lead?.company ?? "");
   const [contact, setContact] = useState(lead?.contact_name ?? "");
+  const [designation, setDesignation] = useState(lead?.designation ?? "");
   const [email, setEmail] = useState(lead?.email ?? "");
+  const [phone, setPhone] = useState(lead?.phone ?? "");
+  const [category, setCategory] = useState(lead?.category ?? "");
   const [status, setStatus] = useState<string>(lead?.status ?? "Cold");
   const [nextAction, setNextAction] = useState(lead?.next_action ?? "");
+  const [followUp, setFollowUp] = useState(lead?.follow_up_date ?? "");
   const [notes, setNotes] = useState(lead?.notes ?? "");
 
   const qc = useQueryClient();
@@ -29,19 +34,41 @@ export function LeadDialog({ trigger, lead }: { trigger: ReactNode; lead?: Lead 
       const { data: { user } } = await supabase.auth.getUser();
       const payload = {
         company, contact_name: contact || null, email: email || null,
-        status, next_action: nextAction || null, notes: notes || null,
+        designation: designation || null, phone: phone || null, category: category || null,
+        status, next_action: nextAction || null, notes: notes || null, follow_up_date: followUp || null,
         created_by: user?.id ?? null,
       };
       const { error } = lead
         ? await supabase.from("leads").update(payload).eq("id", lead.id)
-        : await supabase.from("leads").insert(payload);
+        : await supabase.from("leads").insert(payload).select().single();
+      
       if (error) throw error;
+
+      // Log activity
+      const leadId = lead ? lead.id : (error as any)?.data?.id; // If insert returns id
+      if (leadId || lead) {
+        const actualLeadId = lead ? lead.id : leadId;
+        const actionText = !lead ? "Created lead" : (lead.status !== status ? `Changed status to ${status}` : "Updated lead details");
+        // Internal lead activity
+        supabase.from("lead_activities" as any).insert({
+          lead_id: actualLeadId,
+          actor_name: user?.email?.split("@")[0] ?? "System",
+          action: actionText
+        }).then();
+      }
+      
+      logActivity("CRM", !lead ? "Created lead" : "Updated lead", company);
     },
     onSuccess: () => {
       toast.success(lead ? "Lead updated" : "Lead added");
       qc.invalidateQueries({ queryKey: ["leads"] });
+      qc.invalidateQueries({ queryKey: ["lead_activities"] });
+      qc.invalidateQueries({ queryKey: ["activity_log"] });
       setOpen(false);
-      if (!lead) setCompany(""); setContact(""); setEmail(""); setStatus("Cold"); setNextAction(""); setNotes("");
+      if (!lead) {
+        setCompany(""); setContact(""); setEmail(""); setStatus("Cold"); setNextAction(""); setNotes("");
+        setDesignation(""); setPhone(""); setCategory(""); setFollowUp("");
+      }
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -68,11 +95,32 @@ export function LeadDialog({ trigger, lead }: { trigger: ReactNode; lead?: Lead 
               <Input id="contact" value={contact} onChange={(e) => setContact(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Label htmlFor="designation">Designation</Label>
+              <Input id="designation" value={designation} onChange={(e) => setDesignation(e.target.value)} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="phone">Phone</Label>
+              <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Category</Label>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                <SelectContent>
+                  {["Agri", "Food Tech", "Research", "Government", "NGO", "Corporate", "Other"].map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-1.5">
               <Label>Status</Label>
               <Select value={status} onValueChange={setStatus}>
@@ -82,22 +130,29 @@ export function LeadDialog({ trigger, lead }: { trigger: ReactNode; lead?: Lead 
                 </SelectContent>
               </Select>
             </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="next">Next action</Label>
               <Input id="next" value={nextAction} onChange={(e) => setNextAction(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="followUp">Follow-up date</Label>
+              <Input id="followUp" type="date" value={followUp} onChange={(e) => setFollowUp(e.target.value)} />
             </div>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="notes">Notes</Label>
             <Textarea id="notes" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
-          <DialogFooter>
+          <DialogFooter className="mt-4">
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
             <Button type="submit" disabled={mut.isPending || !company.trim()}>
               {mut.isPending ? "Saving…" : lead ? "Save" : "Add Lead"}
             </Button>
           </DialogFooter>
         </form>
+        {lead && <LeadActivityPanel leadId={lead.id} />}
       </DialogContent>
     </Dialog>
   );

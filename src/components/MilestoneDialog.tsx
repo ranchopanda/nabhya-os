@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import type { Milestone } from "@/lib/queries";
+import { type Milestone, logActivity } from "@/lib/queries";
 
 export function MilestoneDialog({ trigger, milestone }: { trigger: ReactNode; milestone?: Milestone }) {
   const [open, setOpen] = useState(false);
@@ -27,10 +27,12 @@ export function MilestoneDialog({ trigger, milestone }: { trigger: ReactNode; mi
         ? await supabase.from("milestones").update(payload).eq("id", milestone.id)
         : await supabase.from("milestones").insert(payload);
       if (error) throw error;
+      logActivity("Milestones", !milestone ? "Created milestone" : "Updated milestone", title);
     },
     onSuccess: () => {
       toast.success(milestone ? "Milestone updated" : "Milestone added");
       qc.invalidateQueries({ queryKey: ["milestones"] });
+      qc.invalidateQueries({ queryKey: ["activity_log"] });
       setOpen(false);
       if (!milestone) setTitle(""); setDescription(""); setCategory("");
     },

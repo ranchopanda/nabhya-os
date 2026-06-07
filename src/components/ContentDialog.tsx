@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { CONTENT_PLATFORMS, CONTENT_STATUSES, type ContentPost } from "@/lib/queries";
+import { CONTENT_PLATFORMS, CONTENT_STATUSES, type ContentPost, logActivity } from "@/lib/queries";
 
 export function ContentDialog({ trigger, post }: { trigger: ReactNode; post?: ContentPost }) {
   const [open, setOpen] = useState(false);
@@ -31,10 +31,12 @@ export function ContentDialog({ trigger, post }: { trigger: ReactNode; post?: Co
         ? await supabase.from("content_posts").update(payload).eq("id", post.id)
         : await supabase.from("content_posts").insert(payload);
       if (error) throw error;
+      logActivity("Content", !post ? "Posted content" : "Updated content", topic);
     },
     onSuccess: () => {
       toast.success(post ? "Post updated" : "Post added");
       qc.invalidateQueries({ queryKey: ["content_posts"] });
+      qc.invalidateQueries({ queryKey: ["activity_log"] });
       setOpen(false);
       if (!post) setPlatform("LinkedIn"); setTopic(""); setFormat(""); setStatus("Idea"); setDate(""); setReach("");
     },

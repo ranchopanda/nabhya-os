@@ -20,6 +20,7 @@ import { Route as AuthenticatedPilotsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedMilestonesRouteImport } from './routes/_authenticated/milestones'
 import { Route as AuthenticatedMembersRouteImport } from './routes/_authenticated/members'
 import { Route as AuthenticatedInvestorRouteImport } from './routes/_authenticated/investor'
+import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
 import { Route as AuthenticatedDataEntryRouteImport } from './routes/_authenticated/data-entry'
 import { Route as AuthenticatedCrmRouteImport } from './routes/_authenticated/crm'
@@ -80,6 +81,11 @@ const AuthenticatedInvestorRoute = AuthenticatedInvestorRouteImport.update({
   path: '/investor',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDocumentsRoute = AuthenticatedDocumentsRouteImport.update({
   id: '/documents',
   path: '/documents',
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/crm': typeof AuthenticatedCrmRoute
   '/data-entry': typeof AuthenticatedDataEntryRoute
   '/documents': typeof AuthenticatedDocumentsRoute
+  '/history': typeof AuthenticatedHistoryRoute
   '/investor': typeof AuthenticatedInvestorRoute
   '/members': typeof AuthenticatedMembersRoute
   '/milestones': typeof AuthenticatedMilestonesRoute
@@ -131,6 +138,7 @@ export interface FileRoutesByTo {
   '/crm': typeof AuthenticatedCrmRoute
   '/data-entry': typeof AuthenticatedDataEntryRoute
   '/documents': typeof AuthenticatedDocumentsRoute
+  '/history': typeof AuthenticatedHistoryRoute
   '/investor': typeof AuthenticatedInvestorRoute
   '/members': typeof AuthenticatedMembersRoute
   '/milestones': typeof AuthenticatedMilestonesRoute
@@ -150,6 +158,7 @@ export interface FileRoutesById {
   '/_authenticated/crm': typeof AuthenticatedCrmRoute
   '/_authenticated/data-entry': typeof AuthenticatedDataEntryRoute
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
+  '/_authenticated/history': typeof AuthenticatedHistoryRoute
   '/_authenticated/investor': typeof AuthenticatedInvestorRoute
   '/_authenticated/members': typeof AuthenticatedMembersRoute
   '/_authenticated/milestones': typeof AuthenticatedMilestonesRoute
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '/crm'
     | '/data-entry'
     | '/documents'
+    | '/history'
     | '/investor'
     | '/members'
     | '/milestones'
@@ -186,6 +196,7 @@ export interface FileRouteTypes {
     | '/crm'
     | '/data-entry'
     | '/documents'
+    | '/history'
     | '/investor'
     | '/members'
     | '/milestones'
@@ -204,6 +215,7 @@ export interface FileRouteTypes {
     | '/_authenticated/crm'
     | '/_authenticated/data-entry'
     | '/_authenticated/documents'
+    | '/_authenticated/history'
     | '/_authenticated/investor'
     | '/_authenticated/members'
     | '/_authenticated/milestones'
@@ -299,6 +311,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInvestorRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/history': {
+      id: '/_authenticated/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof AuthenticatedHistoryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/documents': {
       id: '/_authenticated/documents'
       path: '/documents'
@@ -343,6 +362,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCrmRoute: typeof AuthenticatedCrmRoute
   AuthenticatedDataEntryRoute: typeof AuthenticatedDataEntryRoute
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
+  AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
   AuthenticatedInvestorRoute: typeof AuthenticatedInvestorRoute
   AuthenticatedMembersRoute: typeof AuthenticatedMembersRoute
   AuthenticatedMilestonesRoute: typeof AuthenticatedMilestonesRoute
@@ -360,6 +380,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCrmRoute: AuthenticatedCrmRoute,
   AuthenticatedDataEntryRoute: AuthenticatedDataEntryRoute,
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
+  AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
   AuthenticatedInvestorRoute: AuthenticatedInvestorRoute,
   AuthenticatedMembersRoute: AuthenticatedMembersRoute,
   AuthenticatedMilestonesRoute: AuthenticatedMilestonesRoute,
@@ -381,3 +402,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

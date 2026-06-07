@@ -46,7 +46,7 @@ function InvestorBody() {
   const { data: leads } = useSuspenseQuery(leadsQuery);
   const { data: apps } = useSuspenseQuery(applicationsQuery);
   const { data: proof } = useSuspenseQuery(proofDocsQuery("vault"));
-  const metrics = computeHealthMetrics(leads, pilots, apps, proof).slice(0, 4);
+  const metrics = computeHealthMetrics(leads, pilots, apps, [], proof).slice(0, 4);
 
   return (
     <>

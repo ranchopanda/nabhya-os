@@ -11,7 +11,9 @@ import { LeadDialog } from "@/components/LeadDialog";
 import { DeleteButton } from "@/components/DeleteButton";
 import { leadsQuery, LEAD_STATUSES } from "@/lib/queries";
 import { useCurrentRole } from "@/hooks/use-current-role";
-import { Edit, Plus, Search } from "lucide-react";
+import { exportToCSV } from "@/lib/export";
+import { Download, Edit, Plus, Search } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/crm")({
   head: () => ({ meta: [{ title: "CRM & Lead Pipeline · Nabhya OS" }, { name: "description", content: "Track every organization Nabhya is in conversation with." }] }),
@@ -24,7 +26,26 @@ export const Route = createFileRoute("/_authenticated/crm")({
 });
 
 function CRMPage() {
-  const { canEdit } = useCurrentRole();
+  const { canEdit, isFounder } = useCurrentRole();
+  const { data: leads } = useSuspenseQuery(leadsQuery);
+
+  const lastUpdated = leads.length > 0 ? formatDistanceToNow(new Date(leads[0].updated_at || leads[0].created_at)) + " ago" : null;
+
+  const handleExport = () => {
+    exportToCSV("nabhya_leads", leads, [
+      { header: "Company", key: "company" },
+      { header: "Contact Name", key: "contact_name" },
+      { header: "Designation", key: "designation" },
+      { header: "Email", key: "email" },
+      { header: "Phone", key: "phone" },
+      { header: "Category", key: "category" },
+      { header: "Status", key: "status" },
+      { header: "Notes", key: "notes" },
+      { header: "Next Action", key: "next_action" },
+      { header: "Follow Up Date", key: "follow_up_date" },
+    ]);
+  };
+
   return (
     <AppShell>
       <div className="px-6 lg:px-10 py-8 max-w-[1400px] mx-auto">
@@ -32,9 +53,19 @@ function CRMPage() {
           eyebrow="Module 2"
           title="CRM & Lead Pipeline"
           description="Every conversation Nabhya is having, end-to-end."
-          action={canEdit ? (
-            <LeadDialog trigger={<Button size="sm"><Plus className="h-4 w-4" /> Add Lead</Button>} />
-          ) : undefined}
+          lastUpdated={lastUpdated}
+          action={
+            <div className="flex gap-2">
+              {isFounder && (
+                <Button variant="outline" size="sm" onClick={handleExport} className="gap-2">
+                  <Download className="h-4 w-4" /> Export
+                </Button>
+              )}
+              {canEdit ? (
+                <LeadDialog trigger={<Button size="sm"><Plus className="h-4 w-4" /> Add Lead</Button>} />
+              ) : null}
+            </div>
+          }
         />
         <Suspense fallback={<Skeleton className="h-96" />}>
           <CRMContent />
@@ -48,16 +79,23 @@ function CRMContent() {
   const { data: leads } = useSuspenseQuery(leadsQuery);
   const { canEdit, isFounder } = useCurrentRole();
   const [q, setQ] = useState("");
+  const [activeStatus, setActiveStatus] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
+    let result = leads;
+    if (activeStatus) {
+      result = result.filter(l => l.status === activeStatus);
+    }
     const needle = q.trim().toLowerCase();
-    if (!needle) return leads;
-    return leads.filter((l) =>
-      [l.company, l.contact_name, l.email, l.notes, l.next_action]
-        .filter(Boolean)
-        .some((v) => (v as string).toLowerCase().includes(needle))
-    );
-  }, [leads, q]);
+    if (needle) {
+      result = result.filter((l) =>
+        [l.company, l.contact_name, l.email, l.notes, l.next_action]
+          .filter(Boolean)
+          .some((v) => (v as string).toLowerCase().includes(needle))
+      );
+    }
+    return result;
+  }, [leads, q, activeStatus]);
 
   const counts = useMemo(() => {
     const map = new Map<string, number>();
@@ -79,12 +117,27 @@ function CRMContent() {
         </div>
       </Card>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        {LEAD_STATUSES.slice(0, 4).map((s) => (
-          <Card key={s} className="p-4">
-            <div className="text-xs text-muted-foreground">{s}</div>
-            <div className="font-display text-2xl font-semibold mt-1">{counts.get(s) ?? 0}</div>
-          </Card>
+      <div className="flex flex-wrap gap-2 mb-6">
+        <Button
+          variant={activeStatus === null ? "default" : "outline"}
+          size="sm"
+          onClick={() => setActiveStatus(null)}
+          className="rounded-full"
+        >
+          All
+          <Badge variant="secondary" className="ml-2 bg-background/50 hover:bg-background/50 text-foreground">{leads.length}</Badge>
+        </Button>
+        {LEAD_STATUSES.map((s) => (
+          <Button
+            key={s}
+            variant={activeStatus === s ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveStatus(activeStatus === s ? null : s)}
+            className="rounded-full"
+          >
+            {s}
+            <Badge variant="secondary" className="ml-2 bg-background/50 hover:bg-background/50 text-foreground">{counts.get(s) ?? 0}</Badge>
+          </Button>
         ))}
       </div>
 

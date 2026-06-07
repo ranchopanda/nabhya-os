@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { APPLICATION_STAGES, type Application } from "@/lib/queries";
+import { APPLICATION_STAGES, type Application, logActivity } from "@/lib/queries";
 
 export function ApplicationDialog({ trigger, application }: { trigger: ReactNode; application?: Application }) {
   const [open, setOpen] = useState(false);
@@ -31,10 +31,12 @@ export function ApplicationDialog({ trigger, application }: { trigger: ReactNode
         ? await supabase.from("applications").update(payload).eq("id", application.id)
         : await supabase.from("applications").insert(payload);
       if (error) throw error;
+      logActivity("Applications", !application ? "Added application" : "Updated application", name);
     },
     onSuccess: () => {
       toast.success(application ? "Application updated" : "Application added");
       qc.invalidateQueries({ queryKey: ["applications"] });
+      qc.invalidateQueries({ queryKey: ["activity_log"] });
       setOpen(false);
       if (!application) setName(""); setOrganizer(""); setCategory(""); setStage("Researching"); setDate(""); setRemarks("");
     },

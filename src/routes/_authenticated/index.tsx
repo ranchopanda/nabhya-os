@@ -6,14 +6,22 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LeadDialog } from "@/components/LeadDialog";
+import { ProductUpdateDialog } from "@/components/ProductUpdateDialog";
+import { UploadDialog } from "@/components/UploadDialog";
+import { ContentDialog } from "@/components/ContentDialog";
+import { ApplicationDialog } from "@/components/ApplicationDialog";
+import { LinkedInDialog } from "@/components/LinkedInDialog";
+import { useCurrentRole } from "@/hooks/use-current-role";
 import {
   leadsQuery, pilotsQuery, milestonesQuery, productUpdatesQuery, applicationsQuery,
+  linkedinSnapshotsQuery, proofDocsQuery,
   computeHealthMetrics, computeWeeklyProgress,
 } from "@/lib/queries";
 import {
-  Plus, FileCheck2, ArrowUpRight, CheckCircle2,
+  Plus, FileCheck2, ArrowUpRight, CheckCircle2, AlertCircle, Wrench, ShieldCheck, Megaphone, TrendingUp
 } from "lucide-react";
 import { Suspense } from "react";
+import { formatDistanceToNow } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
@@ -28,6 +36,8 @@ export const Route = createFileRoute("/_authenticated/")({
     context.queryClient.ensureQueryData(milestonesQuery);
     context.queryClient.ensureQueryData(productUpdatesQuery);
     context.queryClient.ensureQueryData(applicationsQuery);
+    context.queryClient.ensureQueryData(linkedinSnapshotsQuery);
+    context.queryClient.ensureQueryData(proofDocsQuery("vault"));
   },
   component: DashboardPage,
   errorComponent: ({ error }) => (
@@ -46,6 +56,19 @@ const toneClass: Record<string, string> = {
 };
 
 function DashboardPage() {
+  const { canEdit } = useCurrentRole();
+  const { data: leads } = useSuspenseQuery(leadsQuery);
+  const { data: pilots } = useSuspenseQuery(pilotsQuery);
+  const { data: milestones } = useSuspenseQuery(milestonesQuery);
+
+  const dates = [
+    ...(leads || []).map((x: any) => new Date(x.updated_at || x.created_at).getTime()),
+    ...(pilots || []).map((x: any) => new Date(x.updated_at || x.created_at).getTime()),
+    ...(milestones || []).map((x: any) => new Date(x.occurred_on).getTime()),
+  ].filter(Boolean);
+
+  const lastUpdated = dates.length > 0 ? formatDistanceToNow(Math.max(...dates)) + " ago" : null;
+
   return (
     <AppShell>
       <div className="px-6 lg:px-10 py-8 max-w-[1400px] mx-auto">
@@ -53,13 +76,18 @@ function DashboardPage() {
           eyebrow="Executive Dashboard"
           title="What's happening at Nabhya"
           description="Everything Anand, the team, and investors need — leads, pilots, proof and momentum — answerable in under 30 seconds."
+          lastUpdated={lastUpdated}
           action={
-            <div className="flex flex-wrap gap-2">
-              <LeadDialog trigger={<Button size="sm"><Plus className="h-4 w-4" /> Add Lead</Button>} />
-              <Button size="sm" variant="secondary" asChild>
-                <a href="/applications"><FileCheck2 className="h-4 w-4" /> Applications</a>
-              </Button>
-            </div>
+            canEdit ? (
+              <div className="flex flex-wrap gap-2">
+                <LeadDialog trigger={<Button size="sm"><Plus className="h-4 w-4" /> Add Lead</Button>} />
+                <LinkedInDialog trigger={<Button size="sm" variant="secondary"><TrendingUp className="h-4 w-4" /> Log Followers</Button>} />
+                <ProductUpdateDialog trigger={<Button size="sm" variant="secondary"><Wrench className="h-4 w-4" /> Log Update</Button>} />
+                <UploadDialog kind="vault" trigger={<Button size="sm" variant="secondary"><ShieldCheck className="h-4 w-4" /> Upload Proof</Button>} />
+                <ContentDialog trigger={<Button size="sm" variant="secondary"><Megaphone className="h-4 w-4" /> Add Content</Button>} />
+                <ApplicationDialog trigger={<Button size="sm" variant="secondary"><FileCheck2 className="h-4 w-4" /> Add App</Button>} />
+              </div>
+            ) : undefined
           }
         />
         <Suspense fallback={<DashboardSkeleton />}>
@@ -81,14 +109,49 @@ function DashboardSkeleton() {
   );
 }
 
+function FollowUpAlert({ leads }: { leads: any[] }) {
+  const { isFounder, canEdit } = useCurrentRole();
+  if (!isFounder && !canEdit) return null; // Only founder/team see CRM alerts
+
+  const todayStr = new Date().toISOString().split("T")[0];
+  const overdue = leads.filter(l => 
+    l.follow_up_date && 
+    l.follow_up_date <= todayStr && 
+    !["Customer", "Rejected"].includes(l.status)
+  );
+
+  if (overdue.length === 0) return null;
+
+  return (
+    <Card className="mb-6 p-4 border-brand-yellow/50 bg-brand-yellow/5 flex items-start gap-3">
+      <div className="bg-brand-yellow/20 p-2 rounded-full text-[oklch(0.45_0.14_80)]">
+        <AlertCircle className="h-5 w-5" />
+      </div>
+      <div>
+        <h4 className="font-semibold text-sm">Follow-ups due ({overdue.length})</h4>
+        <div className="text-xs text-muted-foreground mt-1 space-y-1">
+          {overdue.map(l => (
+            <div key={l.id}>
+              <a href="/crm" className="font-medium hover:underline text-foreground">{l.company}</a>
+              {l.next_action ? ` — ${l.next_action}` : ""} ({l.follow_up_date})
+            </div>
+          ))}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 function DashboardContent() {
   const { data: leads } = useSuspenseQuery(leadsQuery);
   const { data: pilots } = useSuspenseQuery(pilotsQuery);
   const { data: milestones } = useSuspenseQuery(milestonesQuery);
   const { data: productUpdates } = useSuspenseQuery(productUpdatesQuery);
   const { data: applications } = useSuspenseQuery(applicationsQuery);
+  const { data: linkedinSnapshots } = useSuspenseQuery(linkedinSnapshotsQuery);
+  const { data: proofDocs } = useSuspenseQuery(proofDocsQuery("vault"));
 
-  const metrics = computeHealthMetrics(leads, pilots, applications);
+  const metrics = computeHealthMetrics(leads, pilots, applications, linkedinSnapshots, proofDocs);
   const weekly = computeWeeklyProgress(leads, productUpdates, applications);
   const recentLeads = leads.slice(0, 5);
   const topPilots = pilots.slice(0, 3);
@@ -96,6 +159,7 @@ function DashboardContent() {
 
   return (
     <>
+      <FollowUpAlert leads={leads} />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
         {metrics.map((m) => (
           <Card key={m.label} className="p-4 shadow-[var(--shadow-card)] border-border/60">

@@ -14,28 +14,48 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { logActivity } from "@/lib/queries";
 
 export function DeleteButton({
   table,
   id,
   queryKey,
   label = "record",
+  filePath,
 }: {
   table: string;
   id: string;
   queryKey: QueryKey;
   label?: string;
+  filePath?: string | null;
 }) {
   const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: async () => {
+      if (filePath) {
+        await supabase.storage.from("proof-vault").remove([filePath]);
+      }
       const client = supabase as any;
       const { error } = await client.from(table).delete().eq("id", id);
       if (error) throw error;
+      
+      const moduleMap: Record<string, string> = {
+        leads: "CRM",
+        tasks: "Tasks",
+        product_updates: "Product",
+        pilots: "Pilots",
+        milestones: "Milestones",
+        applications: "Applications",
+        content_posts: "Content",
+        proof_documents: "Documents"
+      };
+      
+      logActivity(moduleMap[table] || table, `Deleted ${label}`, id);
     },
     onSuccess: () => {
       toast.success("Deleted");
       queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: ["activity_log"] });
     },
     onError: (error: Error) => toast.error(error.message),
   });

@@ -11,8 +11,9 @@ import { UploadDialog } from "@/components/UploadDialog";
 import { proofDocsQuery } from "@/lib/queries";
 import { useCurrentRole } from "@/hooks/use-current-role";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Upload, FileText, Download } from "lucide-react";
+import { Search, Upload, FileText, Download, Pencil } from "lucide-react";
 import { toast } from "sonner";
+import { DeleteButton } from "@/components/DeleteButton";
 
 export const Route = createFileRoute("/_authenticated/documents")({
   head: () => ({ meta: [{ title: "Document Hub · Nabhya OS" }, { name: "description", content: "Central storage for business and research docs." }] }),
@@ -47,6 +48,7 @@ function DocsPage() {
 
 function DocsBody() {
   const { data: docs } = useSuspenseQuery(proofDocsQuery("document"));
+  const { canEdit, isFounder } = useCurrentRole();
   const [q, setQ] = useState("");
   const filtered = useMemo(() => {
     const n = q.trim().toLowerCase();
@@ -69,12 +71,33 @@ function DocsBody() {
               <div className="font-medium truncate">{d.title}</div>
               {d.description && <div className="text-sm text-muted-foreground truncate">{d.description}</div>}
             </div>
-            <Badge variant="secondary">{d.category}</Badge>
-            {d.file_path && (
-              <Button size="sm" variant="ghost" onClick={() => downloadFile(d.file_path!)}>
-                <Download className="h-4 w-4" />
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {d.file_path && (
+                <Button size="sm" variant="ghost" onClick={() => downloadFile(d.file_path!)}>
+                  <Download className="h-4 w-4" />
+                </Button>
+              )}
+              {canEdit && (
+                <UploadDialog
+                  kind="document"
+                  doc={d}
+                  trigger={
+                    <Button size="icon" variant="ghost">
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  }
+                />
+              )}
+              {isFounder && (
+                <DeleteButton
+                  table="proof_documents"
+                  id={d.id}
+                  queryKey={["proof_documents", "document"]}
+                  label="document"
+                  filePath={d.file_path}
+                />
+              )}
+            </div>
           </div>
         ))}
       </Card>
