@@ -12,34 +12,37 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { PILOT_STATUSES } from "@/lib/queries";
+import { PILOT_STATUSES, type Pilot } from "@/lib/queries";
 
-export function PilotDialog({ trigger }: { trigger: ReactNode }) {
+export function PilotDialog({ trigger, pilot }: { trigger: ReactNode; pilot?: Pilot }) {
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [organization, setOrg] = useState("");
-  const [status, setStatus] = useState<string>("Proposed");
-  const [endDate, setEndDate] = useState("");
-  const [progress, setProgress] = useState("0");
-  const [objectives, setObjectives] = useState("");
-  const [kpis, setKpis] = useState("");
+  const [name, setName] = useState(pilot?.name ?? "");
+  const [organization, setOrg] = useState(pilot?.organization ?? "");
+  const [status, setStatus] = useState<string>(pilot?.status ?? "Proposed");
+  const [endDate, setEndDate] = useState(pilot?.end_date ?? "");
+  const [progress, setProgress] = useState(String(pilot?.progress ?? 0));
+  const [objectives, setObjectives] = useState(pilot?.objectives ?? "");
+  const [kpis, setKpis] = useState(pilot?.kpis ?? "");
 
   const qc = useQueryClient();
   const mut = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("pilots").insert({
+      const payload = {
         name, organization: organization || null, status,
         end_date: endDate || null,
         progress: Math.max(0, Math.min(100, Number(progress) || 0)),
         objectives: objectives || null, kpis: kpis || null,
-      });
+      };
+      const { error } = pilot
+        ? await supabase.from("pilots").update(payload).eq("id", pilot.id)
+        : await supabase.from("pilots").insert(payload);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Pilot added");
+      toast.success(pilot ? "Pilot updated" : "Pilot added");
       qc.invalidateQueries({ queryKey: ["pilots"] });
       setOpen(false);
-      setName(""); setOrg(""); setStatus("Proposed"); setEndDate(""); setProgress("0"); setObjectives(""); setKpis("");
+      if (!pilot) setName(""); setOrg(""); setStatus("Proposed"); setEndDate(""); setProgress("0"); setObjectives(""); setKpis("");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -49,8 +52,8 @@ export function PilotDialog({ trigger }: { trigger: ReactNode }) {
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>New Pilot</DialogTitle>
-          <DialogDescription>Capture a new field deployment or trial.</DialogDescription>
+          <DialogTitle>{pilot ? "Edit Pilot" : "New Pilot"}</DialogTitle>
+          <DialogDescription>{pilot ? "Update progress, status, or field notes." : "Capture a new field deployment or trial."}</DialogDescription>
         </DialogHeader>
         <form
           className="space-y-3"
@@ -96,7 +99,7 @@ export function PilotDialog({ trigger }: { trigger: ReactNode }) {
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
             <Button type="submit" disabled={mut.isPending || !name.trim()}>
-              {mut.isPending ? "Saving…" : "Add Pilot"}
+              {mut.isPending ? "Saving…" : pilot ? "Save" : "Add Pilot"}
             </Button>
           </DialogFooter>
         </form>

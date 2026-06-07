@@ -12,33 +12,36 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { LEAD_STATUSES } from "@/lib/queries";
+import { LEAD_STATUSES, type Lead } from "@/lib/queries";
 
-export function LeadDialog({ trigger }: { trigger: ReactNode }) {
+export function LeadDialog({ trigger, lead }: { trigger: ReactNode; lead?: Lead }) {
   const [open, setOpen] = useState(false);
-  const [company, setCompany] = useState("");
-  const [contact, setContact] = useState("");
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<string>("Cold");
-  const [nextAction, setNextAction] = useState("");
-  const [notes, setNotes] = useState("");
+  const [company, setCompany] = useState(lead?.company ?? "");
+  const [contact, setContact] = useState(lead?.contact_name ?? "");
+  const [email, setEmail] = useState(lead?.email ?? "");
+  const [status, setStatus] = useState<string>(lead?.status ?? "Cold");
+  const [nextAction, setNextAction] = useState(lead?.next_action ?? "");
+  const [notes, setNotes] = useState(lead?.notes ?? "");
 
   const qc = useQueryClient();
   const mut = useMutation({
     mutationFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      const { error } = await supabase.from("leads").insert({
+      const payload = {
         company, contact_name: contact || null, email: email || null,
         status, next_action: nextAction || null, notes: notes || null,
         created_by: user?.id ?? null,
-      });
+      };
+      const { error } = lead
+        ? await supabase.from("leads").update(payload).eq("id", lead.id)
+        : await supabase.from("leads").insert(payload);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Lead added");
+      toast.success(lead ? "Lead updated" : "Lead added");
       qc.invalidateQueries({ queryKey: ["leads"] });
       setOpen(false);
-      setCompany(""); setContact(""); setEmail(""); setStatus("Cold"); setNextAction(""); setNotes("");
+      if (!lead) setCompany(""); setContact(""); setEmail(""); setStatus("Cold"); setNextAction(""); setNotes("");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -48,8 +51,8 @@ export function LeadDialog({ trigger }: { trigger: ReactNode }) {
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add Lead</DialogTitle>
-          <DialogDescription>Track a new conversation in the pipeline.</DialogDescription>
+          <DialogTitle>{lead ? "Edit Lead" : "Add Lead"}</DialogTitle>
+          <DialogDescription>{lead ? "Update this conversation." : "Track a new conversation in the pipeline."}</DialogDescription>
         </DialogHeader>
         <form
           className="space-y-3"
@@ -91,7 +94,7 @@ export function LeadDialog({ trigger }: { trigger: ReactNode }) {
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
             <Button type="submit" disabled={mut.isPending || !company.trim()}>
-              {mut.isPending ? "Saving…" : "Add Lead"}
+              {mut.isPending ? "Saving…" : lead ? "Save" : "Add Lead"}
             </Button>
           </DialogFooter>
         </form>
