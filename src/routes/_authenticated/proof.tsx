@@ -51,6 +51,7 @@ function ProofBody() {
   const { data: docs } = useSuspenseQuery(proofDocsQuery("vault"));
   const { canEdit, isFounder } = useCurrentRole();
   const [filter, setFilter] = useState<string>("All");
+  const [preview, setPreview] = useState<{ path: string; title: string; mime?: string | null } | null>(null);
   const filtered = filter === "All" ? docs : docs.filter((d) => d.category === filter);
 
   return (
@@ -68,14 +69,26 @@ function ProofBody() {
           <div className="px-5 py-12 text-center text-sm text-muted-foreground">No proof uploaded yet.</div>
         ) : filtered.map((d) => (
           <div key={d.id} className="px-5 py-4 border-b last:border-0 flex items-center gap-4">
-            <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
-            <div className="flex-1 min-w-0">
-              <div className="font-medium truncate">{d.title}</div>
-              {d.description && <div className="text-sm text-muted-foreground truncate">{d.description}</div>}
-            </div>
+            <button
+              type="button"
+              className="flex items-center gap-4 flex-1 min-w-0 text-left hover:opacity-80 transition-opacity disabled:cursor-default"
+              onClick={() => d.file_path && setPreview({ path: d.file_path, title: d.title, mime: d.mime_type })}
+              disabled={!d.file_path}
+            >
+              <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="font-medium truncate">{d.title}</div>
+                {d.description && <div className="text-sm text-muted-foreground truncate">{d.description}</div>}
+              </div>
+            </button>
             <div className="flex items-center gap-2">
               {d.file_path && (
-                <Button size="sm" variant="ghost" onClick={() => downloadFile(d.file_path!)}>
+                <Button size="icon" variant="ghost" onClick={() => setPreview({ path: d.file_path!, title: d.title, mime: d.mime_type })} title="Preview">
+                  <Eye className="h-4 w-4" />
+                </Button>
+              )}
+              {d.file_path && (
+                <Button size="icon" variant="ghost" onClick={() => downloadFile(d.file_path!)} title="Download">
                   <Download className="h-4 w-4" />
                 </Button>
               )}
@@ -103,6 +116,13 @@ function ProofBody() {
           </div>
         ))}
       </Card>
+      <FilePreviewDialog
+        open={!!preview}
+        onOpenChange={(o) => !o && setPreview(null)}
+        filePath={preview?.path ?? null}
+        title={preview?.title ?? ""}
+        mimeType={preview?.mime ?? null}
+      />
     </>
   );
 }
