@@ -210,7 +210,7 @@ export const linkedinSnapshotsQuery = queryOptions({
       console.warn("linkedin_snapshots table may not exist yet.", error);
       return [];
     }
-    return (data ?? []) as LinkedinSnapshot[];
+    return (data ?? []) as unknown as LinkedinSnapshot[];
   },
 });
 
@@ -274,7 +274,7 @@ export const activityLogQuery = queryOptions({
       console.warn("activity_log table may not exist yet.", error);
       return [];
     }
-    return (data ?? []) as ActivityLog[];
+    return (data ?? []) as unknown as ActivityLog[];
   },
 });
 
