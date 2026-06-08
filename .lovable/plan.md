@@ -1,85 +1,32 @@
-You’re right: the app has database tables and some add dialogs, but it is not yet a coherent internal product. The biggest actual break I found is that your logged-in account has no `profile` and no `role`, so the app treats you like an investor/readonly user. That hides most “Add / Upload / Manage” actions, making it feel like there is no way to feed data.
+# Fix the "Preview has not been built yet" error
 
-## What I will fix
+## What's actually happening
 
-### 1. Repair account onboarding and roles
-- Add a safe backend repair migration that backfills missing `profiles` and `user_roles` for existing signed-in users.
-- Make sure there is always at least one `founder` admin.
-- Keep roles in `user_roles` only, not profiles.
-- Confirm the signup trigger creates profile + role for future users.
+The local dev server is healthy (Vite is running, returning HTML, no compile errors). The error is coming from the **static preview deployment**, not the live sandbox:
 
-### 2. Add a real “Data Entry” command center
-Create a clear page where the team can add all operational data from one place:
-
-```text
-Data Entry
-- Add Lead
-- Add Pilot
-- Add Application
-- Log Product Update
-- Add Milestone
-- Add Content Post
-- Add Team Member
-- Add Task
-- Upload Proof
-- Upload Document
+```
+[proxy-worker2] Error: Worker bundle not found:
+dwl:pre:27d2ddaa-...:07f8e80a:_worker_bundle.json
+→ 404 at id-preview--...lovable.app/
 ```
 
-This makes the app understandable: users do not need to hunt across scattered modules to know where data goes.
+The preview infrastructure is trying to load a worker bundle for commit SHA `07f8e80a` that was never published (the previous preview build either failed or was evicted from storage). Until a new preview build is published for the current code, the preview URL keeps returning the "Preview has not been built yet" page.
 
-### 3. Make module pages actionable, not just displays
-For each module page, keep the existing live database reads, but add obvious empty states and actions:
-- CRM: add lead, edit status/details
-- Pilots: add pilot, update progress/status
-- Applications: add application, update stage/result
-- Product Log: log product update
-- Content: add content post, update status/metrics
-- Team HQ: add team member
-- Tasks: add task, move status
-- Milestones: add milestone
-- Proof Vault / Documents: upload file + metadata
+I checked the code that was last changed (the new `/data-entry` route, `useCurrentRole`, `AppShell`, `ensureCurrentMember` server fn, the regenerated `routeTree.gen.ts`) and there are no compile errors blocking the build — so a rebuild should succeed.
 
-### 4. Fix create/update/delete completeness
-Most dialogs only do “create”. I’ll add the missing edit/delete flows so data can be maintained after entry:
-- Reuse each dialog for create and edit where possible.
-- Add row/card actions: Edit, Delete where roles allow it.
-- Delete remains founder-only according to existing backend policy.
+## Plan
 
-### 5. Make permissions visible instead of confusing
-Right now if a user lacks role data, buttons simply disappear. I’ll change that to:
-- Show user role clearly in the shell.
-- Show a “Readonly / ask founder for edit access” state when not editable.
-- If the current user is the only/no admin case, repair it through the backend migration.
-- Show Members in navigation for founders.
+1. **Trigger a fresh build** by making a no-op safe edit and letting the system publish a new preview bundle. Concretely:
+   - Run `bun run build` once in the sandbox to confirm the production/SSR build still compiles cleanly end-to-end (this is what the preview pipeline runs). If it surfaces an error, fix it before re-publishing.
+2. **If `bun run build` fails**, the most likely suspects (based on recent changes) are:
+   - `src/routes/_authenticated/data-entry.tsx` — verify all 10 dialog components still export the expected `trigger` prop signature.
+   - `src/lib/member.functions.ts` — confirm the dynamic `client.server` import resolves under the Worker bundle.
+   - `src/routeTree.gen.ts` — if it is out of sync with the files in `src/routes/_authenticated/`, delete it and let the Vite plugin regenerate.
+   I will read the build output and patch only the file(s) the error points to — no speculative rewrites.
+3. **Re-publish the preview** so the proxy can find a fresh `_worker_bundle.json` for the new SHA. After that, reload `id-preview--...lovable.app` — it should serve the app instead of the "not built" page.
+4. **Verify**: open the preview URL, confirm `/`, `/data-entry`, and `/members` all render, and check `stack_modern--server-function-logs deployment=preview` shows `200`s instead of `Worker bundle not found`.
 
-### 6. Connect dashboard metrics to every live source
-The dashboard currently uses live data but misses some sources. I’ll wire it to:
-- leads
-- pilots
-- applications
-- product updates
-- tasks
-- proof documents
-- milestones
+## Notes
 
-So the dashboard becomes a real roll-up of the internal product, not a separate static view.
-
-### 7. Clean navigation and language
-- Add “Data Entry” to the sidebar.
-- Rename/organize module labels so the workflow is clear.
-- Improve empty states to say exactly what data belongs there and provide the correct action button.
-
-### 8. Validate with real signals
-After implementing, I’ll verify:
-- no stale `mock-data` imports remain
-- account role/profile requests return data
-- create buttons appear for founder/team users
-- forms insert records into the backend
-- dashboard updates from live records
-- no runtime/server errors appear in preview logs
-
-## Technical notes
-- Backend is already present through Lovable Cloud: tables, RLS policies, storage bucket, auth, and roles exist.
-- The app is broken mainly because the current user has no role/profile rows, and the frontend hides write actions based on that role.
-- I will use a migration for the role/profile repair and keep the app using the existing client + RLS pattern for normal CRUD.
-- I will not use mock data again.
+- No schema changes, no new dependencies, no UI redesign — this is purely a build/publish recovery.
+- If the rebuild keeps failing for the same reason after one fix attempt, I'll stop and report the exact error instead of looping.
