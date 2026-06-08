@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_log: {
+        Row: {
+          action: string
+          actor_name: string | null
+          created_at: string
+          detail: Json | null
+          entity_name: string | null
+          id: string
+          module: string
+        }
+        Insert: {
+          action: string
+          actor_name?: string | null
+          created_at?: string
+          detail?: Json | null
+          entity_name?: string | null
+          id?: string
+          module: string
+        }
+        Update: {
+          action?: string
+          actor_name?: string | null
+          created_at?: string
+          detail?: Json | null
+          entity_name?: string | null
+          id?: string
+          module?: string
+        }
+        Relationships: []
+      }
       applications: {
         Row: {
           category: string | null
@@ -98,6 +128,41 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_activities: {
+        Row: {
+          action: string
+          actor_name: string | null
+          created_at: string
+          detail: string | null
+          id: string
+          lead_id: string
+        }
+        Insert: {
+          action: string
+          actor_name?: string | null
+          created_at?: string
+          detail?: string | null
+          id?: string
+          lead_id: string
+        }
+        Update: {
+          action?: string
+          actor_name?: string | null
+          created_at?: string
+          detail?: string | null
+          id?: string
+          lead_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_activities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           category: string | null
@@ -146,6 +211,27 @@ export type Database = {
           phone?: string | null
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      linkedin_snapshots: {
+        Row: {
+          created_at: string
+          follower_count: number
+          id: string
+          occurred_on: string
+        }
+        Insert: {
+          created_at?: string
+          follower_count: number
+          id?: string
+          occurred_on?: string
+        }
+        Update: {
+          created_at?: string
+          follower_count?: number
+          id?: string
+          occurred_on?: string
         }
         Relationships: []
       }
