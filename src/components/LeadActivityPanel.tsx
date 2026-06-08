@@ -18,7 +18,7 @@ export function LeadActivityPanel({ leadId }: { leadId: string }) {
         console.warn("lead_activities table may not exist yet.", error);
         return [] as LeadActivity[];
       }
-      return (data || []) as LeadActivity[];
+      return (data || []) as unknown as LeadActivity[];
     },
   });
 
