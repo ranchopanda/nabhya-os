@@ -11,9 +11,10 @@ import { UploadDialog } from "@/components/UploadDialog";
 import { proofDocsQuery } from "@/lib/queries";
 import { useCurrentRole } from "@/hooks/use-current-role";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Upload, FileText, Download, Pencil } from "lucide-react";
+import { Search, Upload, FileText, Download, Pencil, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { DeleteButton } from "@/components/DeleteButton";
+import { FilePreviewDialog } from "@/components/FilePreviewDialog";
 
 export const Route = createFileRoute("/_authenticated/documents")({
   head: () => ({ meta: [{ title: "Document Hub · Nabhya OS" }, { name: "description", content: "Central storage for business and research docs." }] }),
