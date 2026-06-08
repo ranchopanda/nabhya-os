@@ -10,9 +10,10 @@ import { UploadDialog } from "@/components/UploadDialog";
 import { proofDocsQuery, PROOF_CATEGORIES } from "@/lib/queries";
 import { useCurrentRole } from "@/hooks/use-current-role";
 import { supabase } from "@/integrations/supabase/client";
-import { Upload, FileText, Download, Pencil } from "lucide-react";
+import { Upload, FileText, Download, Pencil, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { DeleteButton } from "@/components/DeleteButton";
+import { FilePreviewDialog } from "@/components/FilePreviewDialog";
 
 export const Route = createFileRoute("/_authenticated/proof")({
   head: () => ({ meta: [{ title: "Proof Vault · Nabhya OS" }, { name: "description", content: "Validation, awards, competitions, and media." }] }),
