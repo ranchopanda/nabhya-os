@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedTasksRouteImport } from './routes/_authenticated/tasks'
 import { Route as AuthenticatedProofRouteImport } from './routes/_authenticated/proof'
@@ -24,6 +25,7 @@ import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
 import { Route as AuthenticatedDataEntryRouteImport } from './routes/_authenticated/data-entry'
 import { Route as AuthenticatedCrmRouteImport } from './routes/_authenticated/crm'
+import { Route as AuthenticatedCopilotRouteImport } from './routes/_authenticated/copilot'
 import { Route as AuthenticatedContentRouteImport } from './routes/_authenticated/content'
 import { Route as AuthenticatedApplicationsRouteImport } from './routes/_authenticated/applications'
 
@@ -40,6 +42,11 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
   id: '/team',
@@ -101,6 +108,11 @@ const AuthenticatedCrmRoute = AuthenticatedCrmRouteImport.update({
   path: '/crm',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCopilotRoute = AuthenticatedCopilotRouteImport.update({
+  id: '/copilot',
+  path: '/copilot',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedContentRoute = AuthenticatedContentRouteImport.update({
   id: '/content',
   path: '/content',
@@ -118,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/applications': typeof AuthenticatedApplicationsRoute
   '/content': typeof AuthenticatedContentRoute
+  '/copilot': typeof AuthenticatedCopilotRoute
   '/crm': typeof AuthenticatedCrmRoute
   '/data-entry': typeof AuthenticatedDataEntryRoute
   '/documents': typeof AuthenticatedDocumentsRoute
@@ -130,11 +143,13 @@ export interface FileRoutesByFullPath {
   '/proof': typeof AuthenticatedProofRoute
   '/tasks': typeof AuthenticatedTasksRoute
   '/team': typeof AuthenticatedTeamRoute
+  '/api/chat': typeof ApiChatRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/applications': typeof AuthenticatedApplicationsRoute
   '/content': typeof AuthenticatedContentRoute
+  '/copilot': typeof AuthenticatedCopilotRoute
   '/crm': typeof AuthenticatedCrmRoute
   '/data-entry': typeof AuthenticatedDataEntryRoute
   '/documents': typeof AuthenticatedDocumentsRoute
@@ -147,6 +162,7 @@ export interface FileRoutesByTo {
   '/proof': typeof AuthenticatedProofRoute
   '/tasks': typeof AuthenticatedTasksRoute
   '/team': typeof AuthenticatedTeamRoute
+  '/api/chat': typeof ApiChatRoute
   '/': typeof AuthenticatedIndexRoute
 }
 export interface FileRoutesById {
@@ -155,6 +171,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/applications': typeof AuthenticatedApplicationsRoute
   '/_authenticated/content': typeof AuthenticatedContentRoute
+  '/_authenticated/copilot': typeof AuthenticatedCopilotRoute
   '/_authenticated/crm': typeof AuthenticatedCrmRoute
   '/_authenticated/data-entry': typeof AuthenticatedDataEntryRoute
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
@@ -167,6 +184,7 @@ export interface FileRoutesById {
   '/_authenticated/proof': typeof AuthenticatedProofRoute
   '/_authenticated/tasks': typeof AuthenticatedTasksRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
+  '/api/chat': typeof ApiChatRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
 }
 export interface FileRouteTypes {
@@ -176,6 +194,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/applications'
     | '/content'
+    | '/copilot'
     | '/crm'
     | '/data-entry'
     | '/documents'
@@ -188,11 +207,13 @@ export interface FileRouteTypes {
     | '/proof'
     | '/tasks'
     | '/team'
+    | '/api/chat'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
     | '/applications'
     | '/content'
+    | '/copilot'
     | '/crm'
     | '/data-entry'
     | '/documents'
@@ -205,6 +226,7 @@ export interface FileRouteTypes {
     | '/proof'
     | '/tasks'
     | '/team'
+    | '/api/chat'
     | '/'
   id:
     | '__root__'
@@ -212,6 +234,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/applications'
     | '/_authenticated/content'
+    | '/_authenticated/copilot'
     | '/_authenticated/crm'
     | '/_authenticated/data-entry'
     | '/_authenticated/documents'
@@ -224,12 +247,14 @@ export interface FileRouteTypes {
     | '/_authenticated/proof'
     | '/_authenticated/tasks'
     | '/_authenticated/team'
+    | '/api/chat'
     | '/_authenticated/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiChatRoute: typeof ApiChatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -254,6 +279,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/team': {
       id: '/_authenticated/team'
@@ -339,6 +371,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCrmRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/copilot': {
+      id: '/_authenticated/copilot'
+      path: '/copilot'
+      fullPath: '/copilot'
+      preLoaderRoute: typeof AuthenticatedCopilotRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/content': {
       id: '/_authenticated/content'
       path: '/content'
@@ -359,6 +398,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedApplicationsRoute: typeof AuthenticatedApplicationsRoute
   AuthenticatedContentRoute: typeof AuthenticatedContentRoute
+  AuthenticatedCopilotRoute: typeof AuthenticatedCopilotRoute
   AuthenticatedCrmRoute: typeof AuthenticatedCrmRoute
   AuthenticatedDataEntryRoute: typeof AuthenticatedDataEntryRoute
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
@@ -377,6 +417,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedApplicationsRoute: AuthenticatedApplicationsRoute,
   AuthenticatedContentRoute: AuthenticatedContentRoute,
+  AuthenticatedCopilotRoute: AuthenticatedCopilotRoute,
   AuthenticatedCrmRoute: AuthenticatedCrmRoute,
   AuthenticatedDataEntryRoute: AuthenticatedDataEntryRoute,
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
@@ -398,6 +439,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiChatRoute: ApiChatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
