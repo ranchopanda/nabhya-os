@@ -1,16 +1,16 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Json } from "@/integrations/supabase/types";
 
 export type StoredCopilotMessage = {
   id: string;
   role: "user" | "assistant" | "system";
-  // parts is stored as JSON; the client casts to UIMessage["parts"]
-  parts: unknown;
+  parts: Json;
 };
 
 export const getCopilotHistory = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<{ messages: StoredCopilotMessage[] }> => {
+  .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("copilot_messages")
       .select("id, role, parts, created_at")
@@ -20,7 +20,7 @@ export const getCopilotHistory = createServerFn({ method: "GET" })
     const messages: StoredCopilotMessage[] = (data ?? []).map((row) => ({
       id: row.id as string,
       role: row.role as StoredCopilotMessage["role"],
-      parts: row.parts ?? [],
+      parts: (row.parts ?? []) as Json,
     }));
     return { messages };
   });
