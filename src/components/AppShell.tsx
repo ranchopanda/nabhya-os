@@ -5,7 +5,7 @@ import logo from "@/assets/nabhya-logo.asset.json";
 import { supabase } from "@/integrations/supabase/client";
 import {
   LayoutDashboard, Users, Rocket, ShieldCheck, Wrench, FileCheck2,
-  Megaphone, UsersRound, FolderKanban, ListTodo, History, Eye, LogOut, Shield, DatabaseZap, Search
+  Megaphone, UsersRound, FolderKanban, ListTodo, History, Eye, LogOut, Shield, DatabaseZap, Search, Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCurrentRole } from "@/hooks/use-current-role";
@@ -13,6 +13,7 @@ import { GlobalSearch } from "./GlobalSearch";
 
 const nav = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, roles: ["founder", "team", "investor"] },
+  { to: "/copilot", label: "Copilot", icon: Sparkles, roles: ["founder", "team"] },
   { to: "/data-entry", label: "Data Entry", icon: DatabaseZap, roles: ["founder", "team"] },
   { to: "/crm", label: "CRM Pipeline", icon: Users, roles: ["founder", "team"] },
   { to: "/pilots", label: "Pilots", icon: Rocket, roles: ["founder", "team", "investor"] },
