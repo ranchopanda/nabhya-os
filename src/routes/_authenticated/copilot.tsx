@@ -52,7 +52,9 @@ function CopilotPage() {
     <AppShell>
       <div className="px-6 py-8 max-w-4xl mx-auto w-full">
         <ChatInner
-          initialMessages={(historyQuery.data?.messages ?? []) as UIMessage[]}
+          initialMessages={
+            ((historyQuery.data as { messages?: unknown[] } | undefined)?.messages ?? []) as unknown as UIMessage[]
+          }
           onClear={async () => {
             await clearHistory();
             await queryClient.invalidateQueries({ queryKey: ["copilot_history"] });
