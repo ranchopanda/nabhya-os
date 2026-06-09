@@ -153,6 +153,17 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
 
+      {/* Floating Copilot launcher */}
+      {canEdit && path !== "/copilot" && (
+        <Link
+          to="/copilot"
+          className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 h-12 w-12 rounded-full bg-brand-green text-white shadow-lg flex items-center justify-center hover:scale-105 transition-transform"
+          aria-label="Open Copilot"
+        >
+          <Sparkles className="h-5 w-5" />
+        </Link>
+      )}
+
       {/* Mobile Sticky Nav */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-background flex items-center justify-around p-2 pb-safe z-50">
         <Link to="/" className="flex flex-col items-center gap-1 p-2 text-muted-foreground [&.active]:text-foreground">
