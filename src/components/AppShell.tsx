@@ -5,7 +5,7 @@ import logo from "@/assets/nabhya-logo.asset.json";
 import { supabase } from "@/integrations/supabase/client";
 import {
   LayoutDashboard, Users, Rocket, ShieldCheck, Wrench, FileCheck2,
-  Megaphone, UsersRound, FolderKanban, ListTodo, History, Eye, LogOut, Shield, DatabaseZap, Search
+  Megaphone, UsersRound, FolderKanban, ListTodo, History, Eye, LogOut, Shield, DatabaseZap, Search, Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCurrentRole } from "@/hooks/use-current-role";
@@ -13,6 +13,7 @@ import { GlobalSearch } from "./GlobalSearch";
 
 const nav = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, roles: ["founder", "team", "investor"] },
+  { to: "/copilot", label: "Copilot", icon: Sparkles, roles: ["founder", "team"] },
   { to: "/data-entry", label: "Data Entry", icon: DatabaseZap, roles: ["founder", "team"] },
   { to: "/crm", label: "CRM Pipeline", icon: Users, roles: ["founder", "team"] },
   { to: "/pilots", label: "Pilots", icon: Rocket, roles: ["founder", "team", "investor"] },
@@ -151,6 +152,17 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
 
       <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
+
+      {/* Floating Copilot launcher */}
+      {canEdit && path !== "/copilot" && (
+        <Link
+          to="/copilot"
+          className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 h-12 w-12 rounded-full bg-brand-green text-white shadow-lg flex items-center justify-center hover:scale-105 transition-transform"
+          aria-label="Open Copilot"
+        >
+          <Sparkles className="h-5 w-5" />
+        </Link>
+      )}
 
       {/* Mobile Sticky Nav */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-background flex items-center justify-around p-2 pb-safe z-50">
