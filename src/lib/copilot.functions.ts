@@ -1,20 +1,26 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { UIMessage } from "ai";
+
+export type StoredCopilotMessage = {
+  id: string;
+  role: "user" | "assistant" | "system";
+  // parts is stored as JSON; the client casts to UIMessage["parts"]
+  parts: unknown;
+};
 
 export const getCopilotHistory = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .handler(async ({ context }): Promise<{ messages: StoredCopilotMessage[] }> => {
     const { data, error } = await context.supabase
       .from("copilot_messages")
       .select("id, role, parts, created_at")
       .order("created_at", { ascending: true })
       .limit(500);
     if (error) throw new Error(error.message);
-    const messages: UIMessage[] = (data ?? []).map((row) => ({
-      id: row.id,
-      role: row.role as UIMessage["role"],
-      parts: (row.parts ?? []) as UIMessage["parts"],
+    const messages: StoredCopilotMessage[] = (data ?? []).map((row) => ({
+      id: row.id as string,
+      role: row.role as StoredCopilotMessage["role"],
+      parts: row.parts ?? [],
     }));
     return { messages };
   });
@@ -27,5 +33,5 @@ export const clearCopilotHistory = createServerFn({ method: "POST" })
       .delete()
       .eq("user_id", context.userId);
     if (error) throw new Error(error.message);
-    return { ok: true };
+    return { ok: true as const };
   });
