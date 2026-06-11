@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { membersQuery } from "@/lib/queries";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Copy, Trash2, RefreshCw, ShieldAlert } from "lucide-react";
+import { Trash2, RefreshCw, ShieldAlert } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { createInvite, listInvites, revokeInvite, resendInvite, purgeNonFounders } from "@/lib/invites.functions";
 
