@@ -1,110 +1,82 @@
-# Nabhya Copilot — AI Assistant Plan
+# Invite-only access for Nabhya OS
 
-A chat-based AI assistant embedded in Nabhya OS that can **read your data, answer questions, and take actions** across CRM, Pilots, Tasks, Documents, Content, Applications, and more. Goal: replace 80% of clicking, filtering, and form-filling with a sentence.
+Turn Nabhya OS into a closed, single-organisation workspace. Only founders can let new people in, and every invite is locked to one email, one role, one use, with an expiry.
 
----
+## What changes for users
 
-## 1. Where it lives
+- Public sign-up form is removed. The `/auth` page only shows **Sign in** (email/password + Google).
+- A new founder-only page **Members → Invites** lets a founder:
+  - Enter an email + role (founder / team / investor) + expiry (default 7 days).
+  - Get a one-time invite link to copy, and optionally email it to the recipient.
+  - See pending / accepted / expired / revoked invites and revoke any pending one.
+- An invitee opens the link → lands on `/auth?invite=<token>`:
+  - Page is locked to that invite's email (email field pre-filled, read-only).
+  - They can either create a password or continue with Google.
+  - Google sign-in is gated: if the Google account email doesn't match the invite email, sign-in is rejected and the session is cleared.
+  - On success, the invite is marked `accepted`, the user gets exactly the role baked into the invite, and they land on the dashboard.
+- Existing accounts: keep founders only. All other existing `team`/`investor` users are revoked (their `user_roles` rows removed and their auth accounts disabled). They'll need a fresh invite to come back.
+- Everyone signed in is part of the single Nabhya org — no separate orgs/tenants. Each person still sees only what their role allows (existing RLS already covers this).
 
-- **Floating Copilot button** (bottom-right) on every authenticated page — opens a side drawer chat.
-- **Dedicated `/copilot` route** for full-screen conversations with thread history.
-- **Inline "Ask AI" buttons** on key surfaces (Lead row, Pilot card, Document, Dashboard) that open the chat pre-scoped to that entity.
-- **Cmd/Ctrl+J** keyboard shortcut to open from anywhere.
+## Technical plan
 
-Conversation shape: **threaded** with **database persistence** (per user, RLS-scoped). Founder/team only; investors get a read-only Q&A variant.
+### 1. Database (one migration)
 
----
+- New `public.invites` table:
+  - `id uuid pk`, `email citext not null`, `role app_role not null`,
+  - `token_hash text not null unique` (we store SHA-256 of the token, never the raw token),
+  - `invited_by uuid references auth.users`, `created_at`, `expires_at timestamptz not null`,
+  - `status text` in (`pending`,`accepted`,`revoked`,`expired`) default `pending`,
+  - `accepted_by uuid`, `accepted_at timestamptz`.
+  - GRANTs for `authenticated` + `service_role`; RLS: only founders can `SELECT`/`INSERT`/`UPDATE`. No anon access.
+- Trigger `handle_new_user` is rewritten:
+  - Look up a `pending`, non-expired invite where `lower(email) = lower(NEW.email)`.
+  - If none → raise exception (blocks signup at the DB level — belt & suspenders).
+  - If found → insert profile, insert `user_roles(role = invite.role)`, mark invite `accepted`.
+  - Remove the current "first user becomes founder" logic (founders are seeded once, see step 5).
+- Helper SQL function `consume_invite(token text, user_id uuid, email text)` (SECURITY DEFINER) used by the Google-sign-in server fn to validate + mark accepted in one shot.
 
-## 2. What it can do (capabilities)
+### 2. Supabase Auth config
 
-### A. Ask & analyze (read-only, instant value)
-- "How many warm leads do we have? Which ones haven't been contacted in 2 weeks?"
-- "Summarize this week's progress for an investor update."
-- "Which pilot is at risk? Why?"
-- "What awards have we won this quarter?"
-- "Draft the LinkedIn post from this product update."
-- "Who on the team has the most open tasks?"
+- Call `configure_auth` with `disable_signup: true`. All account creation goes through server functions that use the admin client (`supabaseAdmin.auth.admin.createUser` / `inviteUserByEmail`), so public `signUp()` is closed off.
 
-### B. Create & update (action tools)
-- **CRM**: "Add lead — Acme Corp, contact Jane (jane@acme.com), category enterprise, status Contacted."
-- **Tasks**: "Create a task for me: prepare Acme pitch deck, due Friday."
-- **Pilots**: "Move the BHEL pilot to Running and set progress to 40%."
-- **Milestones**: "Log a milestone — closed first paying customer today."
-- **Activity log**: every AI action writes to `activity_log` with actor = "Copilot (user name)".
-- **Bulk edits**: "Mark all leads from last month's webinar as Cold."
+### 3. Server functions (`src/lib/invites.functions.ts`)
 
-### C. Document intelligence (Proof Vault & Documents)
-- "Summarize this pitch deck." / "Extract key numbers from this financial PDF."
-- "Find the slide where we mention our TAM."
-- Auto-tag uploads with category + extracted description on upload.
-- Semantic search: "Find all docs that mention ISRO."
+All gated by `requireSupabaseAuth` + founder role check (`has_role`):
 
-### D. Content & outreach drafting
-- "Draft a cold outreach email to this lead based on their company and our last pilot."
-- "Turn this milestone into 3 LinkedIn post variants."
-- "Generate a weekly newsletter from this week's activity log."
+- `createInvite({ email, role, expiresInDays })` → generates random 32-byte token, stores SHA-256 hash, returns raw token + URL (`/auth?invite=<token>`) once.
+- `listInvites()` → for the Members → Invites table.
+- `revokeInvite({ id })` → sets `status = 'revoked'`.
+- `resendInvite({ id })` → regenerates token (new hash, new expiry).
 
-### E. Reporting & exports
-- "Build an investor update for May." → renders markdown + offers PDF export.
-- "Export warm leads as CSV." → triggers existing export.
-- "Show me the funnel: leads → meetings → pilots → customers."
+Public (no auth required, but token-validated) server functions in `src/lib/invite-redeem.functions.ts`:
 
-### F. Smart suggestions (proactive)
-- Dashboard widget: "3 leads need follow-up", "Pilot X has no update in 14 days", "Application deadline in 3 days".
-- On-open briefing: "Here's what changed since you last logged in."
+- `validateInvite({ token })` → returns `{ email, role, valid }` so the auth page can lock the email field.
+- `redeemInviteWithPassword({ token, password })` → admin-creates user with that email + role, marks invite accepted, returns session for client to set.
+- `redeemInviteWithGoogle({ token, googleEmail, userId })` → called right after Google OAuth returns; verifies emails match, assigns role, marks invite accepted. If mismatch → sign the user out and delete the just-created auth row.
 
----
+### 4. UI
 
-## 3. Architecture (technical)
+- `src/routes/auth.tsx`: remove the "Create an account" toggle. If `?invite=<token>` is present, call `validateInvite`, lock the email field, and show a "You're joining Nabhya OS as <role>" banner. Google button uses the same gating flow.
+- `src/routes/_authenticated/members.tsx`: add an **Invites** section above the members table with a "New invite" dialog (email, role, expiry) and a list with Copy link / Email / Revoke actions.
+- `src/components/AppShell.tsx`: no nav change (Members already founder-only).
 
-- **Model**: Lovable AI Gateway → `google/gemini-3-flash-preview` (fast, free-tier friendly) with fallback to `gemini-2.5-pro` for heavy reasoning/document tasks.
-- **SDK**: Vercel AI SDK (`streamText`, `tool`, `stopWhen: stepCountIs(50)`).
-- **Server boundary**: TanStack server route `src/routes/api/chat.ts` for streaming + per-user auth via `requireSupabaseAuth` pattern.
-- **UI**: AI Elements (`Conversation`, `Message`, `MessageResponse`, `Tool`, `PromptInput`) — install via `bun x ai-elements@latest add ...`.
-- **Persistence**: two new tables — `copilot_threads` and `copilot_messages` (UIMessage[] JSON), RLS-scoped to `user_id`, with proper GRANTs.
+### 5. Cleanup of existing public accounts
 
-### Tool catalog (server-side, AI SDK `tool()`)
-Each tool runs as the authenticated user — RLS enforces what they can see/edit. Mutating tools use `needsApproval: true` so the user confirms in chat before writing.
+A one-shot migration step (idempotent SQL inside the same migration) that:
+- Deletes `user_roles` rows where role ∈ (`team`,`investor`).
+- Marks those `auth.users` as banned via `auth.admin.updateUserById({ ban_duration: 'none' })` is not SQL-safe, so we expose a founder-only server fn `purgeNonFounders()` the founder runs once from the Members page (a single button "Revoke all non-founders"). It loops with the admin client and deletes auth users not in `user_roles` with role `founder`.
 
-| Tool | Purpose |
-|---|---|
-| `searchLeads` / `updateLead` / `createLead` / `logLeadActivity` | CRM ops |
-| `listPilots` / `updatePilot` | Pilot ops |
-| `createTask` / `updateTaskStatus` / `assignTask` | Tasks |
-| `createMilestone` / `createProductUpdate` | History |
-| `searchDocuments` / `summarizeDocument` | Reads file via signed URL → model |
-| `createContentPost` / `draftPost` | Content |
-| `getDashboardMetrics` / `getWeeklyProgress` | Reuses `computeHealthMetrics` |
-| `globalSearch` | Reuses existing GlobalSearch index |
-| `logActivity` | Auto-called after every mutation |
+### 6. Optional email delivery
 
-Role gating: investor identity only gets read tools. Founder/team gets full set.
+For "Email the invite", use Lovable's built-in transactional email (needs email domain setup). If the founder hasn't set one up yet, the "Copy link" path still works — we'll only prompt for email domain setup the first time they click "Send email".
 
-### Cost & guardrails
-- Per-user daily message cap (configurable in `.env`).
-- 429/402 surfaced as toasts (rate limit / credits exhausted).
-- All tool inputs Zod-validated (length caps to prevent prompt-injection blowups).
+## Files touched
 
----
+- `supabase/migrations/<new>.sql` — invites table, trigger rewrite, helper functions, RLS, GRANTs.
+- `src/lib/invites.functions.ts` (new)
+- `src/lib/invite-redeem.functions.ts` (new)
+- `src/routes/auth.tsx` — invite-locked sign-in only.
+- `src/routes/_authenticated/members.tsx` — invites UI + purge button.
+- `src/integrations/supabase/...` — regenerated types after migration.
 
-## 4. Build phases
-
-**Phase 1 — Foundation (chat works, read-only)**
-- Tables + RLS, server route, AI Elements install, floating button + drawer, threaded `/copilot` route, system prompt with app context, `searchLeads` / `listPilots` / `getDashboardMetrics` / `globalSearch` tools.
-
-**Phase 2 — Actions**
-- Mutating tools with `needsApproval` confirmations, activity logging, inline "Ask AI about this lead/pilot" entry points.
-
-**Phase 3 — Documents & drafting**
-- `summarizeDocument` (PDF → text via gemini multimodal), content drafting tools, export-to-PDF for investor updates.
-
-**Phase 4 — Proactive**
-- Dashboard "AI briefing" card, daily digest, smart suggestions on stale entities.
-
----
-
-## 5. Open questions before building
-
-1. Should the assistant be available to **investors** (read-only Q&A) or **founder/team only**?
-2. Phase 1 scope OK to start with, or do you want Phase 1+2 (read + write) in the first build?
-3. Any specific first use-case you want bullet-proof on day one (e.g., "draft investor update" vs "manage CRM by chat")?
+Want me to also wire up email delivery now (requires setting up an email domain), or start without it and add later?
