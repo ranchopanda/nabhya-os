@@ -7,8 +7,8 @@ const ROLES = ["founder", "team", "investor"] as const;
 
 async function assertFounder(supabase: any, userId: string) {
   const { data, error } = await supabase.rpc("has_role", { _user_id: userId, _role: "founder" });
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error("Forbidden: founder only");
+  if (error) throw new Error("Only founders can do this");
+  if (!data) throw new Error("Only founders can do this");
 }
 
 function makeToken() {
@@ -32,8 +32,33 @@ export const createInvite = createServerFn({ method: "POST" })
     await assertFounder(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    const emailLc = data.email.toLowerCase();
+
+    // Reject if user already exists with this email
+    const { data: existingProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("id")
+      .ilike("email", emailLc)
+      .maybeSingle();
+    if (existingProfile) {
+      throw new Error("A member with this email already exists");
+    }
+
+    // Reject if a pending, non-expired invite already exists for this email
+    const { data: dupe } = await supabaseAdmin
+      .from("invites")
+      .select("id")
+      .eq("email", emailLc)
+      .eq("status", "pending")
+      .gt("expires_at", new Date().toISOString())
+      .maybeSingle();
+    if (dupe) {
+      throw new Error("A pending invite already exists for this email. Revoke it first or use 'New link'.");
+    }
+
     const { raw, hash } = makeToken();
     const expiresAt = new Date(Date.now() + data.expiresInDays * 24 * 60 * 60 * 1000).toISOString();
+
 
     const { data: row, error } = await supabaseAdmin
       .from("invites")
@@ -102,9 +127,10 @@ export const resendInvite = createServerFn({ method: "POST" })
       .from("invites")
       .update({ token_hash: hash, expires_at: expiresAt, status: "pending", accepted_at: null, accepted_by: null })
       .eq("id", data.id)
+      .in("status", ["pending", "expired", "revoked"])
       .select("id, email, role, expires_at, status, created_at")
       .single();
-    if (error) throw new Error(error.message);
+    if (error) throw new Error("Can't regenerate this invite (already accepted?)");
     return { invite: row, token: raw };
   });
 
