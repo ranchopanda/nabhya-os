@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useSuspenseQuery, useMutation, useQueryClient, useQuery, queryOptions } from "@tanstack/react-query";
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,9 +13,10 @@ import { Badge } from "@/components/ui/badge";
 import { membersQuery } from "@/lib/queries";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Trash2, RefreshCw, ShieldAlert } from "lucide-react";
+import { Trash2, RefreshCw, ShieldAlert, Copy, UserX } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { createInvite, listInvites, revokeInvite, resendInvite, purgeNonFounders } from "@/lib/invites.functions";
+import { setMemberRole, removeMember } from "@/lib/members.functions";
 
 const ROLES = ["founder", "team", "investor"] as const;
 type Role = (typeof ROLES)[number];
@@ -60,20 +61,38 @@ function MembersPage() {
   );
 }
 
+function useCurrentUserId() {
+  const [id, setId] = useState<string | null>(null);
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setId(data.user?.id ?? null));
+  }, []);
+  return id;
+}
+
 function MembersList() {
   const { data: members } = useSuspenseQuery(membersQuery);
   const qc = useQueryClient();
+  const meId = useCurrentUserId();
+  const setRoleFn = useServerFn(setMemberRole);
+  const removeFn = useServerFn(removeMember);
+
+  const founderCount = members.filter((m) => m.roles.includes("founder")).length;
 
   const setRole = useMutation({
-    mutationFn: async ({ userId, role }: { userId: string; role: Role }) => {
-      const { error: delErr } = await supabase.from("user_roles").delete().eq("user_id", userId);
-      if (delErr) throw delErr;
-      const { error } = await supabase.from("user_roles").insert({ user_id: userId, role });
-      if (error) throw error;
-    },
+    mutationFn: async ({ userId, role }: { userId: string; role: Role }) =>
+      setRoleFn({ data: { userId, role } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["members"] });
       toast.success("Role updated");
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const remove = useMutation({
+    mutationFn: async (userId: string) => removeFn({ data: { userId } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["members"] });
+      toast.success("Member removed");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -82,31 +101,46 @@ function MembersList() {
     <Card className="overflow-hidden">
       <div className="px-5 py-4 border-b">
         <div className="font-display text-lg">Active members</div>
+        <p className="text-xs text-muted-foreground">{members.length} total · {founderCount} founder{founderCount === 1 ? "" : "s"}</p>
       </div>
       <table className="w-full text-sm">
         <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
           <tr>
             <th className="text-left p-3">Name</th>
             <th className="text-left p-3">Email</th>
-            <th className="text-left p-3 w-48">Role</th>
+            <th className="text-left p-3">Joined</th>
+            <th className="text-left p-3 w-44">Role</th>
+            <th className="text-right p-3 w-32">Actions</th>
           </tr>
         </thead>
         <tbody>
           {members.length === 0 && (
             <tr>
-              <td colSpan={3} className="p-6 text-center text-muted-foreground">
+              <td colSpan={5} className="p-6 text-center text-muted-foreground">
                 No members yet.
               </td>
             </tr>
           )}
           {members.map((m) => {
             const current = (m.roles[0] as Role) ?? "team";
+            const isSelf = meId === m.id;
+            const isLastFounder = current === "founder" && founderCount <= 1;
+            const lockRole = isLastFounder;
             return (
               <tr key={m.id} className="border-t">
-                <td className="p-3 font-medium">{m.display_name ?? "—"}</td>
+                <td className="p-3 font-medium">
+                  {m.display_name ?? "—"} {isSelf && <span className="text-xs text-muted-foreground">(you)</span>}
+                </td>
                 <td className="p-3 text-muted-foreground">{m.email ?? "—"}</td>
+                <td className="p-3 text-muted-foreground text-xs">
+                  {m.created_at ? new Date(m.created_at).toLocaleDateString() : "—"}
+                </td>
                 <td className="p-3">
-                  <Select value={current} onValueChange={(v) => setRole.mutate({ userId: m.id, role: v as Role })}>
+                  <Select
+                    value={current}
+                    disabled={lockRole || setRole.isPending}
+                    onValueChange={(v) => setRole.mutate({ userId: m.id, role: v as Role })}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -118,6 +152,20 @@ function MembersList() {
                       ))}
                     </SelectContent>
                   </Select>
+                </td>
+                <td className="p-3 text-right">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={isLastFounder || remove.isPending}
+                    onClick={() => {
+                      if (confirm(`Remove ${m.email ?? m.display_name}? They will lose access immediately.`)) {
+                        remove.mutate(m.id);
+                      }
+                    }}
+                  >
+                    <UserX className="h-3.5 w-3.5" /> Remove
+                  </Button>
                 </td>
               </tr>
             );
@@ -142,13 +190,19 @@ function InvitesSection() {
   const [expiresInDays, setExpiresInDays] = useState(7);
   const [lastLink, setLastLink] = useState<string | null>(null);
 
+  const copyLink = (url: string) => {
+    navigator.clipboard.writeText(url).then(
+      () => toast.success("Link copied"),
+      () => toast.error("Copy failed — select the link manually"),
+    );
+  };
+
   const create = useMutation({
     mutationFn: async () => createFn({ data: { email, role, expiresInDays } }),
     onSuccess: ({ token }) => {
       const url = `${window.location.origin}/auth?invite=${token}`;
-      navigator.clipboard.writeText(url).catch(() => {});
+      copyLink(url);
       setLastLink(url);
-      toast.success("Invite created — link copied");
       setEmail("");
       qc.invalidateQueries({ queryKey: ["invites"] });
     },
@@ -168,9 +222,9 @@ function InvitesSection() {
     mutationFn: async (id: string) => resendFn({ data: { id, expiresInDays: 7 } }),
     onSuccess: ({ token, invite }: any) => {
       const url = `${window.location.origin}/auth?invite=${token}`;
-      navigator.clipboard.writeText(url).catch(() => {});
+      copyLink(url);
       setLastLink(url);
-      toast.success(`New link for ${invite.email} — copied`);
+      toast.success(`New link for ${invite.email}`);
       qc.invalidateQueries({ queryKey: ["invites"] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -233,13 +287,19 @@ function InvitesSection() {
                 </div>
               </div>
               {lastLink && (
-                <div className="text-xs p-2 rounded bg-muted break-all">
-                  Last link copied: <code>{lastLink}</code>
+                <div className="space-y-1">
+                  <Label className="text-xs">Invite link (one-time, copy now)</Label>
+                  <div className="flex gap-2">
+                    <Input readOnly value={lastLink} onFocus={(e) => e.currentTarget.select()} className="text-xs" />
+                    <Button type="button" variant="secondary" size="sm" onClick={() => copyLink(lastLink)}>
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setOpen(false)}>
+              <Button variant="outline" onClick={() => { setOpen(false); setLastLink(null); }}>
                 Close
               </Button>
               <Button disabled={!email || create.isPending} onClick={() => create.mutate()}>
@@ -289,7 +349,7 @@ function InvitesSection() {
                     <Trash2 className="h-3.5 w-3.5" /> Revoke
                   </Button>
                 )}
-                {(inv.status === "pending" || inv.status === "expired" || inv.status === "revoked") && (
+                {inv.status !== "accepted" && (
                   <Button size="sm" variant="ghost" onClick={() => resend.mutate(inv.id)}>
                     <RefreshCw className="h-3.5 w-3.5" /> New link
                   </Button>
@@ -307,12 +367,14 @@ function DangerZone() {
   const purgeFn = useServerFn(purgeNonFounders);
   const qc = useQueryClient();
   const [confirming, setConfirming] = useState(false);
+  const [typed, setTyped] = useState("");
   const purge = useMutation({
     mutationFn: async () => purgeFn(),
     onSuccess: ({ removed }: any) => {
       toast.success(`Removed ${removed} non-founder account${removed === 1 ? "" : "s"}`);
       qc.invalidateQueries({ queryKey: ["members"] });
       setConfirming(false);
+      setTyped("");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -332,13 +394,21 @@ function DangerZone() {
               Revoke all non-founders
             </Button>
           ) : (
-            <div className="flex gap-2">
-              <Button variant="destructive" disabled={purge.isPending} onClick={() => purge.mutate()}>
-                {purge.isPending ? "Removing…" : "Yes, remove them"}
-              </Button>
-              <Button variant="outline" onClick={() => setConfirming(false)}>
-                Cancel
-              </Button>
+            <div className="space-y-2">
+              <Label className="text-xs">Type <code className="px-1 bg-muted rounded">REVOKE</code> to confirm</Label>
+              <Input value={typed} onChange={(e) => setTyped(e.target.value)} placeholder="REVOKE" />
+              <div className="flex gap-2">
+                <Button
+                  variant="destructive"
+                  disabled={typed !== "REVOKE" || purge.isPending}
+                  onClick={() => purge.mutate()}
+                >
+                  {purge.isPending ? "Removing…" : "Yes, remove them"}
+                </Button>
+                <Button variant="outline" onClick={() => { setConfirming(false); setTyped(""); }}>
+                  Cancel
+                </Button>
+              </div>
             </div>
           )}
         </div>
@@ -346,4 +416,3 @@ function DangerZone() {
     </Card>
   );
 }
-
