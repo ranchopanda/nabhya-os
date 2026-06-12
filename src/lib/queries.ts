@@ -135,6 +135,7 @@ export type MemberProfile = {
   display_name: string | null;
   email: string | null;
   avatar_url: string | null;
+  created_at?: string | null;
   roles: string[];
 };
 
@@ -251,7 +252,7 @@ export const membersQuery = queryOptions({
   queryKey: ["members"],
   queryFn: async (): Promise<MemberProfile[]> => {
     const [{ data: profiles, error: pErr }, { data: roles, error: rErr }] = await Promise.all([
-      supabase.from("profiles").select("id, display_name, email, avatar_url").order("created_at", { ascending: true }),
+      supabase.from("profiles").select("id, display_name, email, avatar_url, created_at").order("created_at", { ascending: true }),
       supabase.from("user_roles").select("user_id, role"),
     ]);
     if (pErr) throw pErr;
