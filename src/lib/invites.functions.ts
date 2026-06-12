@@ -127,9 +127,10 @@ export const resendInvite = createServerFn({ method: "POST" })
       .from("invites")
       .update({ token_hash: hash, expires_at: expiresAt, status: "pending", accepted_at: null, accepted_by: null })
       .eq("id", data.id)
+      .in("status", ["pending", "expired", "revoked"])
       .select("id, email, role, expires_at, status, created_at")
       .single();
-    if (error) throw new Error(error.message);
+    if (error) throw new Error("Can't regenerate this invite (already accepted?)");
     return { invite: row, token: raw };
   });
 
