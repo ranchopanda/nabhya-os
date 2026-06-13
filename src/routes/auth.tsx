@@ -138,14 +138,17 @@ function AuthPage() {
   async function handleGoogle() {
     setLoading(true);
     if (inviteToken) sessionStorage.setItem(INVITE_STORAGE_KEY, inviteToken);
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin + "/auth",
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin + "/auth",
+      },
     });
-    if (result.error) {
+    if (error) {
       toast.error("Google sign-in failed");
       sessionStorage.removeItem(INVITE_STORAGE_KEY);
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (
