@@ -115,7 +115,7 @@ export const revokeInvite = createServerFn({ method: "POST" })
 export const resendInvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({ id: z.string().uuid(), expiresInDays: z.number().int().min(1).max(60).default(7) }).parse(d),
+    z.object({ id: z.string().uuid(), expiresInDays: z.number().int().min(1).max(365).default(7) }).parse(d),
   )
   .handler(async ({ data, context }) => {
     await assertFounder(context.supabase, context.userId);
