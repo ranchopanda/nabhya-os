@@ -7,8 +7,8 @@ const ROLES = ["founder", "team", "investor"] as const;
 
 async function assertFounder(supabase: any, userId: string) {
   const { data, error } = await supabase.rpc("has_role", { _user_id: userId, _role: "founder" });
-  if (error) throw new Error("Only founders can do this");
-  if (!data) throw new Error("Only founders can do this");
+  if (error) throw new Error(`Permission check failed: ${error.message}`);
+  if (!data) throw new Error("Only founders can do this. Your account isn't a founder.");
 }
 
 function makeToken() {

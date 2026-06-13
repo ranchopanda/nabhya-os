@@ -187,7 +187,7 @@ function InvitesSection() {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<Role>("team");
-  const [expiresInDays, setExpiresInDays] = useState(7);
+  const [expiresInDays, setExpiresInDays] = useState<string>("7");
   const [lastLink, setLastLink] = useState<string | null>(null);
 
   const copyLink = (url: string) => {
@@ -198,7 +198,7 @@ function InvitesSection() {
   };
 
   const create = useMutation({
-    mutationFn: async () => createFn({ data: { email, role, expiresInDays } }),
+    mutationFn: async () => createFn({ data: { email, role, expiresInDays: Math.min(365, Math.max(1, parseInt(expiresInDays, 10) || 7)) } }),
     onSuccess: ({ token }) => {
       const url = `${window.location.origin}/auth?invite=${token}`;
       copyLink(url);
@@ -282,7 +282,7 @@ function InvitesSection() {
                     min={1}
                     max={365}
                     value={expiresInDays}
-                    onChange={(e) => setExpiresInDays(Number(e.target.value) || 7)}
+                    onChange={(e) => setExpiresInDays(e.target.value)}
                   />
                 </div>
               </div>
