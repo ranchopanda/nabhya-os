@@ -187,7 +187,7 @@ function InvitesSection() {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<Role>("team");
-  const [expiresInDays, setExpiresInDays] = useState(7);
+  const [expiresInDays, setExpiresInDays] = useState<string>("7");
   const [lastLink, setLastLink] = useState<string | null>(null);
 
   const copyLink = (url: string) => {
