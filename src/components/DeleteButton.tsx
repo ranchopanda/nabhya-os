@@ -38,7 +38,7 @@ export function DeleteButton({
       const client = supabase as any;
       const { error } = await client.from(table).delete().eq("id", id);
       if (error) throw error;
-      
+
       const moduleMap: Record<string, string> = {
         leads: "CRM",
         tasks: "Tasks",
@@ -47,9 +47,9 @@ export function DeleteButton({
         milestones: "Milestones",
         applications: "Applications",
         content_posts: "Content",
-        proof_documents: "Documents"
+        proof_documents: "Documents",
       };
-      
+
       logActivity(moduleMap[table] || table, `Deleted ${label}`, id);
     },
     onSuccess: () => {

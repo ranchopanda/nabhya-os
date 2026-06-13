@@ -13,13 +13,26 @@ import { useCurrentRole } from "@/hooks/use-current-role";
 import { Edit, Plus, Target, Calendar } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/pilots")({
-  head: () => ({ meta: [{ title: "Pilot Tracker · Nabhya OS" }, { name: "description", content: "Active and upcoming pilots with KPIs and outcomes." }] }),
-  loader: ({ context }) => { context.queryClient.ensureQueryData(pilotsQuery); },
+  head: () => ({
+    meta: [
+      { title: "Pilot Tracker · Nabhya OS" },
+      { name: "description", content: "Active and upcoming pilots with KPIs and outcomes." },
+    ],
+  }),
+  loader: ({ context }) => {
+    context.queryClient.ensureQueryData(pilotsQuery);
+  },
   component: PilotsPage,
   errorComponent: ({ error }) => (
-    <AppShell><div className="p-10 text-sm text-destructive">Failed: {error.message}</div></AppShell>
+    <AppShell>
+      <div className="p-10 text-sm text-destructive">Failed: {error.message}</div>
+    </AppShell>
   ),
-  notFoundComponent: () => <AppShell><div className="p-10">Not found</div></AppShell>,
+  notFoundComponent: () => (
+    <AppShell>
+      <div className="p-10">Not found</div>
+    </AppShell>
+  ),
 });
 
 function PilotsPage() {
@@ -31,11 +44,27 @@ function PilotsPage() {
           eyebrow="Module 3"
           title="Pilot Tracker"
           description="Where Nabhya is being proven in the field."
-          action={canEdit ? (
-            <PilotDialog trigger={<Button size="sm"><Plus className="h-4 w-4" /> New Pilot</Button>} />
-          ) : undefined}
+          action={
+            canEdit ? (
+              <PilotDialog
+                trigger={
+                  <Button size="sm">
+                    <Plus className="h-4 w-4" /> New Pilot
+                  </Button>
+                }
+              />
+            ) : undefined
+          }
         />
-        <Suspense fallback={<div className="grid md:grid-cols-2 gap-5">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-44" />)}</div>}>
+        <Suspense
+          fallback={
+            <div className="grid md:grid-cols-2 gap-5">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-44" />
+              ))}
+            </div>
+          }
+        >
           <PilotsContent />
         </Suspense>
       </div>
@@ -51,7 +80,9 @@ function PilotsContent() {
     return (
       <Card className="p-12 text-center">
         <h3 className="font-display text-lg font-semibold">No pilots yet</h3>
-        <p className="text-sm text-muted-foreground mt-1">Add your first pilot to start tracking field deployments.</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Add your first pilot to start tracking field deployments.
+        </p>
       </Card>
     );
   }
@@ -67,8 +98,19 @@ function PilotsContent() {
             </div>
             <div className="flex items-center gap-1">
               <Badge variant={p.status === "Running" ? "default" : "secondary"}>{p.status}</Badge>
-              {canEdit ? <PilotDialog pilot={p} trigger={<Button size="icon" variant="ghost" aria-label="Edit pilot"><Edit className="h-4 w-4" /></Button>} /> : null}
-              {isFounder ? <DeleteButton table="pilots" id={p.id} queryKey={["pilots"]} label="pilot" /> : null}
+              {canEdit ? (
+                <PilotDialog
+                  pilot={p}
+                  trigger={
+                    <Button size="icon" variant="ghost" aria-label="Edit pilot">
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  }
+                />
+              ) : null}
+              {isFounder ? (
+                <DeleteButton table="pilots" id={p.id} queryKey={["pilots"]} label="pilot" />
+              ) : null}
             </div>
           </div>
           <div className="flex items-center gap-4 mt-4 text-sm text-muted-foreground">
@@ -91,7 +133,10 @@ function PilotsContent() {
               <span className="font-medium">{p.progress}%</span>
             </div>
             <div className="h-2 rounded-full bg-muted overflow-hidden">
-              <div className="h-full rounded-full" style={{ width: `${p.progress}%`, background: "var(--gradient-brand)" }} />
+              <div
+                className="h-full rounded-full"
+                style={{ width: `${p.progress}%`, background: "var(--gradient-brand)" }}
+              />
             </div>
           </div>
         </Card>

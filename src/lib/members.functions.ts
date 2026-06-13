@@ -5,7 +5,12 @@ import { z } from "zod";
 const ROLES = ["founder", "team", "investor"] as const;
 
 async function assertFounder(supabase: any, userId: string) {
-  const { data, error } = await supabase.rpc("has_role", { _user_id: userId, _role: "founder" });
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "founder")
+    .maybeSingle();
   if (error) throw new Error(`Permission check failed: ${error.message}`);
   if (!data) throw new Error("Only founders can do this. Your account isn't a founder.");
 }

@@ -53,7 +53,8 @@ function CopilotPage() {
       <div className="px-6 py-8 max-w-4xl mx-auto w-full">
         <ChatInner
           initialMessages={
-            ((historyQuery.data as { messages?: unknown[] } | undefined)?.messages ?? []) as unknown as UIMessage[]
+            ((historyQuery.data as { messages?: unknown[] } | undefined)?.messages ??
+              []) as unknown as UIMessage[]
           }
           onClear={async () => {
             await clearHistory();
@@ -153,7 +154,8 @@ function ChatInner({
               </div>
               <h3 className="font-display text-lg font-semibold">How can I help?</h3>
               <p className="text-sm text-muted-foreground mt-1 max-w-md">
-                I can read your CRM, pilots, tasks, applications, milestones and proof vault. Ask me anything.
+                I can read your CRM, pilots, tasks, applications, milestones and proof vault. Ask me
+                anything.
               </p>
               <div className="grid sm:grid-cols-2 gap-2 mt-6 w-full max-w-2xl">
                 {SUGGESTIONS.map((s) => (
@@ -180,9 +182,7 @@ function ChatInner({
           )}
 
           {error && (
-            <div className="text-sm text-destructive px-2">
-              {String(error.message ?? error)}
-            </div>
+            <div className="text-sm text-destructive px-2">{String(error.message ?? error)}</div>
           )}
         </div>
 
@@ -277,7 +277,9 @@ function ToolCallView({ part }: { part: Record<string, unknown> & { type: string
       <div className="px-3 pb-3 pt-1 space-y-2">
         {part.input !== undefined && (
           <div>
-            <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Input</div>
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
+              Input
+            </div>
             <pre className="text-[11px] bg-background rounded p-2 overflow-x-auto">
               {JSON.stringify(part.input, null, 2)}
             </pre>
@@ -285,7 +287,9 @@ function ToolCallView({ part }: { part: Record<string, unknown> & { type: string
         )}
         {part.output !== undefined && (
           <div>
-            <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Output</div>
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
+              Output
+            </div>
             <pre className="text-[11px] bg-background rounded p-2 overflow-x-auto max-h-60">
               {JSON.stringify(part.output, null, 2)}
             </pre>

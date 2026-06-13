@@ -27,14 +27,34 @@ function kindFor(path: string, mime?: string | null): Kind {
   if (m === "application/pdf") return "pdf";
   if (m.startsWith("video/")) return "video";
   if (m.startsWith("audio/")) return "audio";
-  if (m.startsWith("text/") || m.includes("json") || m.includes("xml") || m.includes("csv")) return "text";
+  if (m.startsWith("text/") || m.includes("json") || m.includes("xml") || m.includes("csv"))
+    return "text";
 
   const e = extOf(path);
   if (["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "avif"].includes(e)) return "image";
   if (e === "pdf") return "pdf";
   if (["mp4", "webm", "mov", "m4v"].includes(e)) return "video";
   if (["mp3", "wav", "ogg", "m4a", "aac", "flac"].includes(e)) return "audio";
-  if (["txt", "md", "json", "csv", "log", "yml", "yaml", "xml", "html", "css", "js", "ts", "tsx", "jsx", "py"].includes(e)) return "text";
+  if (
+    [
+      "txt",
+      "md",
+      "json",
+      "csv",
+      "log",
+      "yml",
+      "yaml",
+      "xml",
+      "html",
+      "css",
+      "js",
+      "ts",
+      "tsx",
+      "jsx",
+      "py",
+    ].includes(e)
+  )
+    return "text";
   if (["doc", "docx", "ppt", "pptx", "xls", "xlsx"].includes(e)) return "office";
   return "other";
 }
@@ -53,7 +73,9 @@ export function FilePreviewDialog({ open, onOpenChange, filePath, title, mimeTyp
     setUrl(null);
     setTextContent(null);
     (async () => {
-      const { data, error } = await supabase.storage.from("proof-vault").createSignedUrl(filePath, 3600);
+      const { data, error } = await supabase.storage
+        .from("proof-vault")
+        .createSignedUrl(filePath, 3600);
       if (cancelled) return;
       if (error || !data) {
         toast.error(error?.message ?? "Failed to load file");
@@ -72,10 +94,14 @@ export function FilePreviewDialog({ open, onOpenChange, filePath, title, mimeTyp
       }
       if (!cancelled) setLoading(false);
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [open, filePath, kind]);
 
-  const download = () => { if (url) window.open(url, "_blank"); };
+  const download = () => {
+    if (url) window.open(url, "_blank");
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -96,7 +122,11 @@ export function FilePreviewDialog({ open, onOpenChange, filePath, title, mimeTyp
           </div>
         </DialogHeader>
         <div className="flex-1 overflow-auto bg-muted/30">
-          {loading && <div className="p-6"><Skeleton className="h-full min-h-[400px] w-full" /></div>}
+          {loading && (
+            <div className="p-6">
+              <Skeleton className="h-full min-h-[400px] w-full" />
+            </div>
+          )}
           {!loading && url && (
             <>
               {kind === "image" && (
@@ -133,7 +163,9 @@ export function FilePreviewDialog({ open, onOpenChange, filePath, title, mimeTyp
                 <div className="p-10 text-center text-sm text-muted-foreground">
                   Preview not available for this file type.
                   <div className="mt-4">
-                    <Button size="sm" onClick={download}><Download className="h-4 w-4" /> Download</Button>
+                    <Button size="sm" onClick={download}>
+                      <Download className="h-4 w-4" /> Download
+                    </Button>
                   </div>
                 </div>
               )}

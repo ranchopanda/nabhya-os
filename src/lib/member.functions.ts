@@ -26,31 +26,46 @@ export const ensureCurrentMember = createServerFn({ method: "POST" })
       (metadata.display_name as string | undefined) ??
       email?.split("@")[0] ??
       "Team member";
-    const avatarUrl = (metadata.avatar_url as string | undefined) ?? (metadata.picture as string | undefined) ?? null;
+    const avatarUrl =
+      (metadata.avatar_url as string | undefined) ??
+      (metadata.picture as string | undefined) ??
+      null;
 
-    const { error: profileError } = await supabaseAdmin.from("profiles").upsert({
-      id: userId,
-      email,
-      display_name: displayName,
-      avatar_url: avatarUrl,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: "id" });
+    const { error: profileError } = await supabaseAdmin.from("profiles").upsert(
+      {
+        id: userId,
+        email,
+        display_name: displayName,
+        avatar_url: avatarUrl,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "id" },
+    );
     if (profileError) throw profileError;
 
-    const [{ data: myRoles, error: myRolesError }, { count: founderCount, error: countError }] = await Promise.all([
-      supabaseAdmin.from("user_roles").select("role").eq("user_id", userId),
-      supabaseAdmin.from("user_roles").select("id", { count: "exact", head: true }).eq("role", "founder"),
-    ]);
+    const [{ data: myRoles, error: myRolesError }, { count: founderCount, error: countError }] =
+      await Promise.all([
+        supabaseAdmin.from("user_roles").select("role").eq("user_id", userId),
+        supabaseAdmin
+          .from("user_roles")
+          .select("id", { count: "exact", head: true })
+          .eq("role", "founder"),
+      ]);
     if (myRolesError) throw myRolesError;
     if (countError) throw countError;
 
     const roles = (myRoles ?? []).map((row) => row.role as string);
     if (roles.length === 0) {
       const role: Role = (founderCount ?? 0) === 0 ? "founder" : "team";
-      const { error: roleError } = await supabaseAdmin.from("user_roles").insert({ user_id: userId, role });
+      const { error: roleError } = await supabaseAdmin
+        .from("user_roles")
+        .insert({ user_id: userId, role });
       if (roleError) throw roleError;
       roles.push(role);
     }
 
-    return { profile: { id: userId, email, display_name: displayName, avatar_url: avatarUrl }, role: pickRole(roles) };
+    return {
+      profile: { id: userId, email, display_name: displayName, avatar_url: avatarUrl },
+      role: pickRole(roles),
+    };
   });

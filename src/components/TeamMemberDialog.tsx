@@ -1,7 +1,13 @@
 import { useState, type ReactNode } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,8 +29,12 @@ export function TeamMemberDialog({ trigger, member }: { trigger: ReactNode; memb
   const mut = useMutation({
     mutationFn: async () => {
       const payload = {
-        name, role: role || null, current_focus: focus || null,
-        wins_this_month: wins || null, linkedin: linkedin || null, skills: skills || null,
+        name,
+        role: role || null,
+        current_focus: focus || null,
+        wins_this_month: wins || null,
+        linkedin: linkedin || null,
+        skills: skills || null,
       };
       const { error } = member
         ? await supabase.from("team_members").update(payload).eq("id", member.id)
@@ -35,7 +45,12 @@ export function TeamMemberDialog({ trigger, member }: { trigger: ReactNode; memb
       toast.success(member ? "Team member updated" : "Team member added");
       qc.invalidateQueries({ queryKey: ["team_members"] });
       setOpen(false);
-      if (!member) setName(""); setRole(""); setFocus(""); setWins(""); setLinkedin(""); setSkills("");
+      if (!member) setName("");
+      setRole("");
+      setFocus("");
+      setWins("");
+      setLinkedin("");
+      setSkills("");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -46,9 +61,20 @@ export function TeamMemberDialog({ trigger, member }: { trigger: ReactNode; memb
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{member ? "Edit Team Member" : "Add Team Member"}</DialogTitle>
-          <DialogDescription>{member ? "Update role, focus, wins, or links." : "Who's on the team and what they're focused on."}</DialogDescription>
+          <DialogDescription>
+            {member
+              ? "Update role, focus, wins, or links."
+              : "Who's on the team and what they're focused on."}
+          </DialogDescription>
         </DialogHeader>
-        <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); if (!name.trim()) return; mut.mutate(); }}>
+        <form
+          className="space-y-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!name.trim()) return;
+            mut.mutate();
+          }}
+        >
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="tname">Name *</Label>
@@ -56,7 +82,12 @@ export function TeamMemberDialog({ trigger, member }: { trigger: ReactNode; memb
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="trole">Role</Label>
-              <Input id="trole" placeholder="Founder · AI" value={role} onChange={(e) => setRole(e.target.value)} />
+              <Input
+                id="trole"
+                placeholder="Founder · AI"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+              />
             </div>
           </div>
           <div className="space-y-1.5">
@@ -70,7 +101,12 @@ export function TeamMemberDialog({ trigger, member }: { trigger: ReactNode; memb
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="tli">LinkedIn</Label>
-              <Input id="tli" placeholder="https://" value={linkedin} onChange={(e) => setLinkedin(e.target.value)} />
+              <Input
+                id="tli"
+                placeholder="https://"
+                value={linkedin}
+                onChange={(e) => setLinkedin(e.target.value)}
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="tsk">Skills</Label>
@@ -78,8 +114,12 @@ export function TeamMemberDialog({ trigger, member }: { trigger: ReactNode; memb
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="submit" disabled={mut.isPending || !name.trim()}>{mut.isPending ? "Saving…" : member ? "Save" : "Add"}</Button>
+            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={mut.isPending || !name.trim()}>
+              {mut.isPending ? "Saving…" : member ? "Save" : "Add"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -5,7 +5,13 @@ import { AppShell, PageHeader } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { TaskDialog } from "@/components/TaskDialog";
 import { tasksQuery, teamMembersQuery, TASK_STATUSES, type Task } from "@/lib/queries";
 import { useCurrentRole } from "@/hooks/use-current-role";
@@ -16,14 +22,27 @@ import { exportToCSV } from "@/lib/export";
 import { formatDistanceToNow } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/tasks")({
-  head: () => ({ meta: [{ title: "Tasks · Nabhya OS" }, { name: "description", content: "Kanban for the Nabhya team." }] }),
-  loader: ({ context }) => { 
+  head: () => ({
+    meta: [
+      { title: "Tasks · Nabhya OS" },
+      { name: "description", content: "Kanban for the Nabhya team." },
+    ],
+  }),
+  loader: ({ context }) => {
     context.queryClient.ensureQueryData(tasksQuery);
     context.queryClient.ensureQueryData(teamMembersQuery);
   },
   component: TasksPage,
-  errorComponent: ({ error }) => <AppShell><div className="p-10 text-sm text-destructive">Failed: {error.message}</div></AppShell>,
-  notFoundComponent: () => <AppShell><div className="p-10">Not found</div></AppShell>,
+  errorComponent: ({ error }) => (
+    <AppShell>
+      <div className="p-10 text-sm text-destructive">Failed: {error.message}</div>
+    </AppShell>
+  ),
+  notFoundComponent: () => (
+    <AppShell>
+      <div className="p-10">Not found</div>
+    </AppShell>
+  ),
 });
 
 function TasksPage() {
@@ -31,13 +50,16 @@ function TasksPage() {
   const { data: tasks } = useSuspenseQuery(tasksQuery);
   const { data: teamMembers } = useSuspenseQuery(teamMembersQuery);
 
-  const lastUpdated = tasks.length > 0 ? formatDistanceToNow(new Date(tasks[0].updated_at || tasks[0].created_at)) + " ago" : null;
+  const lastUpdated =
+    tasks.length > 0
+      ? formatDistanceToNow(new Date(tasks[0].updated_at || tasks[0].created_at)) + " ago"
+      : null;
 
   const handleExport = () => {
-    const teamMap = new Map(teamMembers.map(m => [m.id, m.name]));
-    const exportData = tasks.map(t => ({
+    const teamMap = new Map(teamMembers.map((m) => [m.id, m.name]));
+    const exportData = tasks.map((t) => ({
       ...t,
-      assignee_name: t.assignee_id ? teamMap.get(t.assignee_id) : "Unassigned"
+      assignee_name: t.assignee_id ? teamMap.get(t.assignee_id) : "Unassigned",
     }));
     exportToCSV("nabhya_tasks", exportData, [
       { header: "Title", key: "title" },
@@ -52,7 +74,9 @@ function TasksPage() {
     <AppShell>
       <div className="px-6 lg:px-10 py-8 max-w-[1400px] mx-auto">
         <PageHeader
-          eyebrow="Module 10" title="Tasks" description="A simple Kanban — backlog to done."
+          eyebrow="Module 10"
+          title="Tasks"
+          description="A simple Kanban — backlog to done."
           lastUpdated={lastUpdated}
           action={
             <div className="flex gap-2">
@@ -61,7 +85,15 @@ function TasksPage() {
                   <Download className="h-4 w-4" /> Export CSV
                 </Button>
               )}
-              {canEdit ? <TaskDialog trigger={<Button size="sm"><Plus className="h-4 w-4" /> New Task</Button>} /> : null}
+              {canEdit ? (
+                <TaskDialog
+                  trigger={
+                    <Button size="sm">
+                      <Plus className="h-4 w-4" /> New Task
+                    </Button>
+                  }
+                />
+              ) : null}
             </div>
           }
         />
@@ -93,7 +125,7 @@ function Board({ canEdit }: { canEdit: boolean }) {
     byStatus.get(t.status)!.push(t);
   }
 
-  const teamMap = new Map(teamMembers.map(m => [m.id, m]));
+  const teamMap = new Map(teamMembers.map((m) => [m.id, m]));
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
@@ -102,25 +134,44 @@ function Board({ canEdit }: { canEdit: boolean }) {
         return (
           <div key={col}>
             <div className="flex items-center justify-between mb-3 px-1">
-              <h3 className="text-xs uppercase tracking-wider font-medium text-muted-foreground">{col}</h3>
+              <h3 className="text-xs uppercase tracking-wider font-medium text-muted-foreground">
+                {col}
+              </h3>
               <span className="text-xs text-muted-foreground">{items.length}</span>
             </div>
             <div className="space-y-2 min-h-32">
               {items.map((t) => (
                 <Card key={t.id} className="p-3 text-sm">
                   <div className="font-medium">{t.title}</div>
-                  {t.description && <div className="text-xs text-muted-foreground mt-1 line-clamp-2">{t.description}</div>}
+                  {t.description && (
+                    <div className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                      {t.description}
+                    </div>
+                  )}
                   {t.assignee_id && teamMap.has(t.assignee_id) && (
                     <div className="mt-2 text-xs font-medium bg-secondary/50 text-secondary-foreground px-2 py-0.5 rounded-full inline-block">
                       {teamMap.get(t.assignee_id)!.name}
                     </div>
                   )}
                   <div className="flex items-center justify-between mt-2 gap-2">
-                    {t.due_date && <span className="text-[10px] text-muted-foreground">{t.due_date}</span>}
+                    {t.due_date && (
+                      <span className="text-[10px] text-muted-foreground">{t.due_date}</span>
+                    )}
                     {canEdit && (
-                      <Select value={t.status} onValueChange={(v) => update.mutate({ id: t.id, status: v })}>
-                        <SelectTrigger className="h-6 text-[10px] w-auto ml-auto"><SelectValue /></SelectTrigger>
-                        <SelectContent>{TASK_STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                      <Select
+                        value={t.status}
+                        onValueChange={(v) => update.mutate({ id: t.id, status: v })}
+                      >
+                        <SelectTrigger className="h-6 text-[10px] w-auto ml-auto">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {TASK_STATUSES.map((s) => (
+                            <SelectItem key={s} value={s}>
+                              {s}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
                       </Select>
                     )}
                   </div>

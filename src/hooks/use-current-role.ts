@@ -8,26 +8,30 @@ export function useCurrentRole() {
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
-        if (mounted) { setRole(null); setLoading(false); }
+        if (mounted) {
+          setRole(null);
+          setLoading(false);
+        }
         return;
       }
-      const { data } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id);
+      const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
       if (!mounted) return;
       const roles = (data ?? []).map((r: any) => r.role as string);
       const top = roles.includes("founder")
         ? "founder"
         : roles.includes("team")
-        ? "team"
-        : roles[0] ?? "investor";
+          ? "team"
+          : (roles[0] ?? "investor");
       setRole(top);
       setLoading(false);
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return {

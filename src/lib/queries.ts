@@ -152,7 +152,10 @@ export type ActivityLog = {
 export const leadsQuery = queryOptions({
   queryKey: ["leads"],
   queryFn: async (): Promise<Lead[]> => {
-    const { data, error } = await supabase.from("leads").select("*").order("updated_at", { ascending: false });
+    const { data, error } = await supabase
+      .from("leads")
+      .select("*")
+      .order("updated_at", { ascending: false });
     if (error) throw error;
     return (data ?? []) as Lead[];
   },
@@ -161,7 +164,10 @@ export const leadsQuery = queryOptions({
 export const pilotsQuery = queryOptions({
   queryKey: ["pilots"],
   queryFn: async (): Promise<Pilot[]> => {
-    const { data, error } = await supabase.from("pilots").select("*").order("updated_at", { ascending: false });
+    const { data, error } = await supabase
+      .from("pilots")
+      .select("*")
+      .order("updated_at", { ascending: false });
     if (error) throw error;
     return (data ?? []) as Pilot[];
   },
@@ -170,7 +176,10 @@ export const pilotsQuery = queryOptions({
 export const milestonesQuery = queryOptions({
   queryKey: ["milestones"],
   queryFn: async (): Promise<Milestone[]> => {
-    const { data, error } = await supabase.from("milestones").select("*").order("occurred_on", { ascending: true });
+    const { data, error } = await supabase
+      .from("milestones")
+      .select("*")
+      .order("occurred_on", { ascending: true });
     if (error) throw error;
     return (data ?? []) as Milestone[];
   },
@@ -179,7 +188,10 @@ export const milestonesQuery = queryOptions({
 export const productUpdatesQuery = queryOptions({
   queryKey: ["product_updates"],
   queryFn: async (): Promise<ProductUpdate[]> => {
-    const { data, error } = await supabase.from("product_updates").select("*").order("occurred_on", { ascending: false });
+    const { data, error } = await supabase
+      .from("product_updates")
+      .select("*")
+      .order("occurred_on", { ascending: false });
     if (error) throw error;
     return (data ?? []) as ProductUpdate[];
   },
@@ -188,7 +200,10 @@ export const productUpdatesQuery = queryOptions({
 export const applicationsQuery = queryOptions({
   queryKey: ["applications"],
   queryFn: async (): Promise<Application[]> => {
-    const { data, error } = await supabase.from("applications").select("*").order("updated_at", { ascending: false });
+    const { data, error } = await supabase
+      .from("applications")
+      .select("*")
+      .order("updated_at", { ascending: false });
     if (error) throw error;
     return (data ?? []) as Application[];
   },
@@ -197,7 +212,10 @@ export const applicationsQuery = queryOptions({
 export const contentPostsQuery = queryOptions({
   queryKey: ["content_posts"],
   queryFn: async (): Promise<ContentPost[]> => {
-    const { data, error } = await supabase.from("content_posts").select("*").order("updated_at", { ascending: false });
+    const { data, error } = await supabase
+      .from("content_posts")
+      .select("*")
+      .order("updated_at", { ascending: false });
     if (error) throw error;
     return (data ?? []) as ContentPost[];
   },
@@ -206,7 +224,10 @@ export const contentPostsQuery = queryOptions({
 export const linkedinSnapshotsQuery = queryOptions({
   queryKey: ["linkedin_snapshots"],
   queryFn: async (): Promise<LinkedinSnapshot[]> => {
-    const { data, error } = await supabase.from("linkedin_snapshots" as any).select("*").order("occurred_on", { ascending: false });
+    const { data, error } = await supabase
+      .from("linkedin_snapshots" as any)
+      .select("*")
+      .order("occurred_on", { ascending: false });
     if (error) {
       console.warn("linkedin_snapshots table may not exist yet.", error);
       return [];
@@ -218,7 +239,11 @@ export const linkedinSnapshotsQuery = queryOptions({
 export const tasksQuery = queryOptions({
   queryKey: ["tasks"],
   queryFn: async (): Promise<Task[]> => {
-    const { data, error } = await supabase.from("tasks").select("*").order("position", { ascending: true }).order("created_at", { ascending: false });
+    const { data, error } = await supabase
+      .from("tasks")
+      .select("*")
+      .order("position", { ascending: true })
+      .order("created_at", { ascending: false });
     if (error) throw error;
     return (data ?? []) as Task[];
   },
@@ -227,7 +252,10 @@ export const tasksQuery = queryOptions({
 export const teamMembersQuery = queryOptions({
   queryKey: ["team_members"],
   queryFn: async (): Promise<TeamMember[]> => {
-    const { data, error } = await supabase.from("team_members").select("*").order("created_at", { ascending: true });
+    const { data, error } = await supabase
+      .from("team_members")
+      .select("*")
+      .order("created_at", { ascending: true });
     if (error) throw error;
     return (data ?? []) as TeamMember[];
   },
@@ -252,7 +280,10 @@ export const membersQuery = queryOptions({
   queryKey: ["members"],
   queryFn: async (): Promise<MemberProfile[]> => {
     const [{ data: profiles, error: pErr }, { data: roles, error: rErr }] = await Promise.all([
-      supabase.from("profiles").select("id, display_name, email, avatar_url, created_at").order("created_at", { ascending: true }),
+      supabase
+        .from("profiles")
+        .select("id, display_name, email, avatar_url, created_at")
+        .order("created_at", { ascending: true }),
       supabase.from("user_roles").select("user_id, role"),
     ]);
     if (pErr) throw pErr;
@@ -270,7 +301,11 @@ export const membersQuery = queryOptions({
 export const activityLogQuery = queryOptions({
   queryKey: ["activity_log"],
   queryFn: async (): Promise<ActivityLog[]> => {
-    const { data, error } = await supabase.from("activity_log" as any).select("*").order("created_at", { ascending: false }).limit(200);
+    const { data, error } = await supabase
+      .from("activity_log" as any)
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(200);
     if (error) {
       console.warn("activity_log table may not exist yet.", error);
       return [];
@@ -279,16 +314,23 @@ export const activityLogQuery = queryOptions({
   },
 });
 
-export async function logActivity(module: string, action: string, entityName?: string | null, detail?: any) {
+export async function logActivity(
+  module: string,
+  action: string,
+  entityName?: string | null,
+  detail?: any,
+) {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     const actorName = user?.email?.split("@")[0] ?? "System";
     await supabase.from("activity_log" as any).insert({
       actor_name: actorName,
       module,
       action,
       entity_name: entityName || null,
-      detail: detail || null
+      detail: detail || null,
     });
   } catch (err) {
     console.error("Failed to log activity", err);
@@ -308,19 +350,56 @@ export function computeHealthMetrics(
   const meetings = leads.filter((l) => l.status === "Meeting Scheduled").length;
   const running = pilots.filter((p) => p.status === "Running" || p.status === "Active").length;
   const customers = leads.filter((l) => l.status === "Customer").length;
-  const submitted = applications.filter((a) => a.stage !== "Researching" && a.stage !== "Idea").length;
+  const submitted = applications.filter(
+    (a) => a.stage !== "Researching" && a.stage !== "Idea",
+  ).length;
   const awards = proofDocs.filter((d) => d.category === "Award" || d.category === "Awards").length;
   const latestLi = linkedinSnapshots[0]?.follower_count ?? 0;
 
   return [
     { label: "Total Leads", value: leads.length, delta: `${warm} warm`, tone: "green" as const },
-    { label: "Warm Leads", value: warm, delta: warm ? "in motion" : "build pipeline", tone: "lime" as const },
-    { label: "Meetings Scheduled", value: meetings, delta: meetings ? "upcoming" : "—", tone: "yellow" as const },
-    { label: "Pilots Running", value: running, delta: `${pilots.length} total`, tone: "green" as const },
-    { label: "Paying Customers", value: customers, delta: customers ? "active" : "First in Q3", tone: "red" as const },
-    { label: "Applications Submitted", value: submitted, delta: `${applications.length} tracked`, tone: "lime" as const },
-    { label: "Awards Won", value: awards, delta: awards ? "validated" : "—", tone: "yellow" as const },
-    { label: "LinkedIn Followers", value: latestLi.toLocaleString(), delta: "Growth", tone: "green" as const },
+    {
+      label: "Warm Leads",
+      value: warm,
+      delta: warm ? "in motion" : "build pipeline",
+      tone: "lime" as const,
+    },
+    {
+      label: "Meetings Scheduled",
+      value: meetings,
+      delta: meetings ? "upcoming" : "—",
+      tone: "yellow" as const,
+    },
+    {
+      label: "Pilots Running",
+      value: running,
+      delta: `${pilots.length} total`,
+      tone: "green" as const,
+    },
+    {
+      label: "Paying Customers",
+      value: customers,
+      delta: customers ? "active" : "First in Q3",
+      tone: "red" as const,
+    },
+    {
+      label: "Applications Submitted",
+      value: submitted,
+      delta: `${applications.length} tracked`,
+      tone: "lime" as const,
+    },
+    {
+      label: "Awards Won",
+      value: awards,
+      delta: awards ? "validated" : "—",
+      tone: "yellow" as const,
+    },
+    {
+      label: "LinkedIn Followers",
+      value: latestLi.toLocaleString(),
+      delta: "Growth",
+      tone: "green" as const,
+    },
   ];
 }
 
@@ -344,19 +423,53 @@ export function computeWeeklyProgress(
 }
 
 export const LEAD_STATUSES = [
-  "Cold", "Contacted", "Opened", "Replied", "Meeting Scheduled", "Pilot Discussion", "Pilot Active", "Customer",
+  "Cold",
+  "Contacted",
+  "Opened",
+  "Replied",
+  "Meeting Scheduled",
+  "Pilot Discussion",
+  "Pilot Active",
+  "Customer",
 ] as const;
 
 export const PILOT_STATUSES = ["Proposed", "Approved", "Running", "Completed", "Paused"] as const;
 
 export const APPLICATION_STAGES = [
-  "Researching", "Preparing", "Submitted", "Interview", "Shortlisted", "Selected", "Rejected",
+  "Researching",
+  "Preparing",
+  "Submitted",
+  "Interview",
+  "Shortlisted",
+  "Selected",
+  "Rejected",
 ] as const;
 
 export const CONTENT_STATUSES = ["Idea", "Draft", "Scheduled", "Published"] as const;
-export const CONTENT_PLATFORMS = ["LinkedIn", "X", "Instagram", "YouTube", "Blog", "Press"] as const;
+export const CONTENT_PLATFORMS = [
+  "LinkedIn",
+  "X",
+  "Instagram",
+  "YouTube",
+  "Blog",
+  "Press",
+] as const;
 
 export const TASK_STATUSES = ["Backlog", "This Week", "In Progress", "Review", "Done"] as const;
 
-export const PROOF_CATEGORIES = ["Validation", "Award", "Competition", "Media", "Press", "Other"] as const;
-export const DOCUMENT_CATEGORIES = ["Business", "Research", "Financial", "Legal", "Presentations", "Submissions"] as const;
+export const PROOF_CATEGORIES = [
+  "Validation",
+  "Award",
+  "Competition",
+  "Media",
+  "Press",
+  "Other",
+] as const;
+export const DOCUMENT_CATEGORIES = [
+  "Business",
+  "Research",
+  "Financial",
+  "Legal",
+  "Presentations",
+  "Submissions",
+] as const;

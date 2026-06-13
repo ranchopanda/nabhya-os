@@ -13,12 +13,26 @@ import { ApplicationDialog } from "@/components/ApplicationDialog";
 import { LinkedInDialog } from "@/components/LinkedInDialog";
 import { useCurrentRole } from "@/hooks/use-current-role";
 import {
-  leadsQuery, pilotsQuery, milestonesQuery, productUpdatesQuery, applicationsQuery,
-  linkedinSnapshotsQuery, proofDocsQuery,
-  computeHealthMetrics, computeWeeklyProgress,
+  leadsQuery,
+  pilotsQuery,
+  milestonesQuery,
+  productUpdatesQuery,
+  applicationsQuery,
+  linkedinSnapshotsQuery,
+  proofDocsQuery,
+  computeHealthMetrics,
+  computeWeeklyProgress,
 } from "@/lib/queries";
 import {
-  Plus, FileCheck2, ArrowUpRight, CheckCircle2, AlertCircle, Wrench, ShieldCheck, Megaphone, TrendingUp
+  Plus,
+  FileCheck2,
+  ArrowUpRight,
+  CheckCircle2,
+  AlertCircle,
+  Wrench,
+  ShieldCheck,
+  Megaphone,
+  TrendingUp,
 } from "lucide-react";
 import { Suspense } from "react";
 import { formatDistanceToNow } from "date-fns";
@@ -27,7 +41,11 @@ export const Route = createFileRoute("/_authenticated/")({
   head: () => ({
     meta: [
       { title: "Nabhya OS · Executive Dashboard" },
-      { name: "description", content: "The single source of truth for Nabhya — leads, pilots, proof, applications and milestones in one view." },
+      {
+        name: "description",
+        content:
+          "The single source of truth for Nabhya — leads, pilots, proof, applications and milestones in one view.",
+      },
     ],
   }),
   loader: ({ context }) => {
@@ -45,7 +63,11 @@ export const Route = createFileRoute("/_authenticated/")({
       <div className="p-10 text-sm text-destructive">Failed to load: {error.message}</div>
     </AppShell>
   ),
-  notFoundComponent: () => <AppShell><div className="p-10">Not found</div></AppShell>,
+  notFoundComponent: () => (
+    <AppShell>
+      <div className="p-10">Not found</div>
+    </AppShell>
+  ),
 });
 
 const toneClass: Record<string, string> = {
@@ -80,12 +102,49 @@ function DashboardPage() {
           action={
             canEdit ? (
               <div className="flex flex-wrap gap-2">
-                <LeadDialog trigger={<Button size="sm"><Plus className="h-4 w-4" /> Add Lead</Button>} />
-                <LinkedInDialog trigger={<Button size="sm" variant="secondary"><TrendingUp className="h-4 w-4" /> Log Followers</Button>} />
-                <ProductUpdateDialog trigger={<Button size="sm" variant="secondary"><Wrench className="h-4 w-4" /> Log Update</Button>} />
-                <UploadDialog kind="vault" trigger={<Button size="sm" variant="secondary"><ShieldCheck className="h-4 w-4" /> Upload Proof</Button>} />
-                <ContentDialog trigger={<Button size="sm" variant="secondary"><Megaphone className="h-4 w-4" /> Add Content</Button>} />
-                <ApplicationDialog trigger={<Button size="sm" variant="secondary"><FileCheck2 className="h-4 w-4" /> Add App</Button>} />
+                <LeadDialog
+                  trigger={
+                    <Button size="sm">
+                      <Plus className="h-4 w-4" /> Add Lead
+                    </Button>
+                  }
+                />
+                <LinkedInDialog
+                  trigger={
+                    <Button size="sm" variant="secondary">
+                      <TrendingUp className="h-4 w-4" /> Log Followers
+                    </Button>
+                  }
+                />
+                <ProductUpdateDialog
+                  trigger={
+                    <Button size="sm" variant="secondary">
+                      <Wrench className="h-4 w-4" /> Log Update
+                    </Button>
+                  }
+                />
+                <UploadDialog
+                  kind="vault"
+                  trigger={
+                    <Button size="sm" variant="secondary">
+                      <ShieldCheck className="h-4 w-4" /> Upload Proof
+                    </Button>
+                  }
+                />
+                <ContentDialog
+                  trigger={
+                    <Button size="sm" variant="secondary">
+                      <Megaphone className="h-4 w-4" /> Add Content
+                    </Button>
+                  }
+                />
+                <ApplicationDialog
+                  trigger={
+                    <Button size="sm" variant="secondary">
+                      <FileCheck2 className="h-4 w-4" /> Add App
+                    </Button>
+                  }
+                />
               </div>
             ) : undefined
           }
@@ -102,7 +161,9 @@ function DashboardSkeleton() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-24" />)}
+        {Array.from({ length: 8 }).map((_, i) => (
+          <Skeleton key={i} className="h-24" />
+        ))}
       </div>
       <Skeleton className="h-48" />
     </div>
@@ -114,10 +175,11 @@ function FollowUpAlert({ leads }: { leads: any[] }) {
   if (!isFounder && !canEdit) return null; // Only founder/team see CRM alerts
 
   const todayStr = new Date().toISOString().split("T")[0];
-  const overdue = leads.filter(l => 
-    l.follow_up_date && 
-    l.follow_up_date <= todayStr && 
-    !["Customer", "Rejected"].includes(l.status)
+  const overdue = leads.filter(
+    (l) =>
+      l.follow_up_date &&
+      l.follow_up_date <= todayStr &&
+      !["Customer", "Rejected"].includes(l.status),
   );
 
   if (overdue.length === 0) return null;
@@ -130,9 +192,11 @@ function FollowUpAlert({ leads }: { leads: any[] }) {
       <div>
         <h4 className="font-semibold text-sm">Follow-ups due ({overdue.length})</h4>
         <div className="text-xs text-muted-foreground mt-1 space-y-1">
-          {overdue.map(l => (
+          {overdue.map((l) => (
             <div key={l.id}>
-              <a href="/crm" className="font-medium hover:underline text-foreground">{l.company}</a>
+              <a href="/crm" className="font-medium hover:underline text-foreground">
+                {l.company}
+              </a>
               {l.next_action ? ` — ${l.next_action}` : ""} ({l.follow_up_date})
             </div>
           ))}
@@ -166,7 +230,9 @@ function DashboardContent() {
             <div className="text-xs font-medium text-muted-foreground">{m.label}</div>
             <div className="mt-2 flex items-baseline justify-between">
               <div className="font-display text-3xl font-semibold tracking-tight">{m.value}</div>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${toneClass[m.tone]}`}>
+              <span
+                className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${toneClass[m.tone]}`}
+              >
                 {m.delta}
               </span>
             </div>
@@ -175,8 +241,10 @@ function DashboardContent() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 p-6 relative overflow-hidden border-0 text-primary-foreground"
-          style={{ background: "var(--gradient-brand)" }}>
+        <Card
+          className="lg:col-span-2 p-6 relative overflow-hidden border-0 text-primary-foreground"
+          style={{ background: "var(--gradient-brand)" }}
+        >
           <div className="relative z-10">
             <div className="text-xs uppercase tracking-widest opacity-90">Last 7 days</div>
             <h2 className="font-display text-2xl font-semibold mt-1">Momentum check</h2>
@@ -211,7 +279,10 @@ function DashboardContent() {
                   <div className="h-2 w-2 mt-2 rounded-full bg-brand-green/40" />
                   <div>
                     <div className="text-xs text-muted-foreground">
-                      {new Date(m.occurred_on).toLocaleDateString(undefined, { month: "short", year: "numeric" })}
+                      {new Date(m.occurred_on).toLocaleDateString(undefined, {
+                        month: "short",
+                        year: "numeric",
+                      })}
                     </div>
                     <div className="text-sm font-medium">{m.title}</div>
                   </div>
@@ -240,10 +311,13 @@ function DashboardContent() {
                   <div className="min-w-0">
                     <div className="font-medium truncate">{l.company}</div>
                     <div className="text-xs text-muted-foreground truncate">
-                      {l.contact_name ?? "—"}{l.next_action ? ` · ${l.next_action}` : ""}
+                      {l.contact_name ?? "—"}
+                      {l.next_action ? ` · ${l.next_action}` : ""}
                     </div>
                   </div>
-                  <Badge className="bg-brand-lime/20 text-brand-green hover:bg-brand-lime/20">{l.status}</Badge>
+                  <Badge className="bg-brand-lime/20 text-brand-green hover:bg-brand-lime/20">
+                    {l.status}
+                  </Badge>
                 </div>
               ))}
             </div>
@@ -263,11 +337,14 @@ function DashboardContent() {
                     <span className="text-xs text-muted-foreground">{p.status}</span>
                   </div>
                   <div className="text-xs text-muted-foreground truncate">
-                    {p.organization ?? "—"}{p.end_date ? ` · ends ${p.end_date}` : ""}
+                    {p.organization ?? "—"}
+                    {p.end_date ? ` · ends ${p.end_date}` : ""}
                   </div>
                   <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
-                    <div className="h-full rounded-full"
-                      style={{ width: `${p.progress}%`, background: "var(--gradient-brand)" }} />
+                    <div
+                      className="h-full rounded-full"
+                      style={{ width: `${p.progress}%`, background: "var(--gradient-brand)" }}
+                    />
                   </div>
                 </div>
               ))}
@@ -288,8 +365,12 @@ function DashboardContent() {
                 <div key={u.id} className="rounded-lg border p-4 bg-card">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <CheckCircle2 className="h-3.5 w-3.5 text-brand-green" />
-                    {new Date(u.occurred_on).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-                    {u.category ? ` · ${u.category}` : ""}{u.owner_name ? ` · ${u.owner_name}` : ""}
+                    {new Date(u.occurred_on).toLocaleDateString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                    })}
+                    {u.category ? ` · ${u.category}` : ""}
+                    {u.owner_name ? ` · ${u.owner_name}` : ""}
                   </div>
                   <div className="font-medium mt-2">{u.feature}</div>
                   {u.impact && <div className="text-sm text-muted-foreground mt-1">{u.impact}</div>}

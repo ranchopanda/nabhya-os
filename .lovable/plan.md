@@ -12,6 +12,7 @@ There is also no real "add member" button on the page today — the only way in 
 ## Fixes
 
 ### 1. Move role changes to an admin server fn
+
 New `src/lib/members.functions.ts` with:
 
 - `setMemberRole({ userId, role })` — `requireSupabaseAuth` + founder check, then `supabaseAdmin` does the `delete + insert` atomically. Guards:
@@ -41,7 +42,7 @@ Wrap `assertFounder` so that on failure it throws `"Only founders can do this"` 
 
 ## Files
 
-- `src/lib/members.functions.ts` *(new)* — `setMemberRole`, `removeMember`
+- `src/lib/members.functions.ts` _(new)_ — `setMemberRole`, `removeMember`
 - `src/lib/invites.functions.ts` — duplicate-pending guard, existing-user guard, accepted-state guard, friendlier error
 - `src/routes/_authenticated/members.tsx` — use the new server fns; add Remove button, last-founder guard, joined column, inline pending invites, typed-confirm for purge, persistent copy-link UI
 - No DB migration required — existing RLS stays as-is; client just stops writing to `user_roles` directly.

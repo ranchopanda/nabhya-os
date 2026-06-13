@@ -6,7 +6,9 @@ const investorAllowedRoutes = ["/", "/pilots", "/proof", "/team", "/milestones",
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async ({ location }) => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (!session) {
       throw redirect({ to: "/auth" });
     }
@@ -22,8 +24,8 @@ export const Route = createFileRoute("/_authenticated")({
     const role = roles.includes("founder")
       ? "founder"
       : roles.includes("team")
-      ? "team"
-      : roles[0] ?? "investor";
+        ? "team"
+        : (roles[0] ?? "investor");
 
     // Block investors from non-allowed routes
     if (role === "investor" && !investorAllowedRoutes.includes(location.pathname)) {

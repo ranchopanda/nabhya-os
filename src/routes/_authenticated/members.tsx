@@ -1,21 +1,46 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useSuspenseQuery, useMutation, useQueryClient, useQuery, queryOptions } from "@tanstack/react-query";
+import {
+  useSuspenseQuery,
+  useMutation,
+  useQueryClient,
+  useQuery,
+  queryOptions,
+} from "@tanstack/react-query";
 import { Suspense, useEffect, useState } from "react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { membersQuery } from "@/lib/queries";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Trash2, RefreshCw, ShieldAlert, Copy, UserX } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
-import { createInvite, listInvites, revokeInvite, resendInvite, purgeNonFounders } from "@/lib/invites.functions";
+import {
+  createInvite,
+  listInvites,
+  revokeInvite,
+  resendInvite,
+  purgeNonFounders,
+} from "@/lib/invites.functions";
 import { setMemberRole, removeMember } from "@/lib/members.functions";
 
 const ROLES = ["founder", "team", "investor"] as const;
@@ -101,7 +126,9 @@ function MembersList() {
     <Card className="overflow-hidden">
       <div className="px-5 py-4 border-b">
         <div className="font-display text-lg">Active members</div>
-        <p className="text-xs text-muted-foreground">{members.length} total · {founderCount} founder{founderCount === 1 ? "" : "s"}</p>
+        <p className="text-xs text-muted-foreground">
+          {members.length} total · {founderCount} founder{founderCount === 1 ? "" : "s"}
+        </p>
       </div>
       <table className="w-full text-sm">
         <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
@@ -129,7 +156,8 @@ function MembersList() {
             return (
               <tr key={m.id} className="border-t">
                 <td className="p-3 font-medium">
-                  {m.display_name ?? "—"} {isSelf && <span className="text-xs text-muted-foreground">(you)</span>}
+                  {m.display_name ?? "—"}{" "}
+                  {isSelf && <span className="text-xs text-muted-foreground">(you)</span>}
                 </td>
                 <td className="p-3 text-muted-foreground">{m.email ?? "—"}</td>
                 <td className="p-3 text-muted-foreground text-xs">
@@ -159,7 +187,11 @@ function MembersList() {
                     variant="ghost"
                     disabled={isLastFounder || remove.isPending}
                     onClick={() => {
-                      if (confirm(`Remove ${m.email ?? m.display_name}? They will lose access immediately.`)) {
+                      if (
+                        confirm(
+                          `Remove ${m.email ?? m.display_name}? They will lose access immediately.`,
+                        )
+                      ) {
                         remove.mutate(m.id);
                       }
                     }}
@@ -198,7 +230,14 @@ function InvitesSection() {
   };
 
   const create = useMutation({
-    mutationFn: async () => createFn({ data: { email, role, expiresInDays: Math.min(365, Math.max(1, parseInt(expiresInDays, 10) || 7)) } }),
+    mutationFn: async () =>
+      createFn({
+        data: {
+          email,
+          role,
+          expiresInDays: Math.min(365, Math.max(1, parseInt(expiresInDays, 10) || 7)),
+        },
+      }),
     onSuccess: ({ token }) => {
       const url = `${window.location.origin}/auth?invite=${token}`;
       copyLink(url);
@@ -237,7 +276,9 @@ function InvitesSection() {
       <div className="px-5 py-4 border-b flex items-center justify-between gap-3">
         <div>
           <div className="font-display text-lg">Invites</div>
-          <p className="text-xs text-muted-foreground">One-time, email-locked links. Expire automatically.</p>
+          <p className="text-xs text-muted-foreground">
+            One-time, email-locked links. Expire automatically.
+          </p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
@@ -290,8 +331,18 @@ function InvitesSection() {
                 <div className="space-y-1">
                   <Label className="text-xs">Invite link (one-time, copy now)</Label>
                   <div className="flex gap-2">
-                    <Input readOnly value={lastLink} onFocus={(e) => e.currentTarget.select()} className="text-xs" />
-                    <Button type="button" variant="secondary" size="sm" onClick={() => copyLink(lastLink)}>
+                    <Input
+                      readOnly
+                      value={lastLink}
+                      onFocus={(e) => e.currentTarget.select()}
+                      className="text-xs"
+                    />
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => copyLink(lastLink)}
+                    >
                       <Copy className="h-3.5 w-3.5" />
                     </Button>
                   </div>
@@ -299,7 +350,13 @@ function InvitesSection() {
               )}
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => { setOpen(false); setLastLink(null); }}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setOpen(false);
+                  setLastLink(null);
+                }}
+              >
                 Close
               </Button>
               <Button disabled={!email || create.isPending} onClick={() => create.mutate()}>
@@ -340,9 +397,13 @@ function InvitesSection() {
               <td className="p-3 font-medium">{inv.email}</td>
               <td className="p-3">{inv.role}</td>
               <td className="p-3">
-                <Badge variant={inv.status === "pending" ? "default" : "secondary"}>{inv.status}</Badge>
+                <Badge variant={inv.status === "pending" ? "default" : "secondary"}>
+                  {inv.status}
+                </Badge>
               </td>
-              <td className="p-3 text-muted-foreground">{new Date(inv.expires_at).toLocaleDateString()}</td>
+              <td className="p-3 text-muted-foreground">
+                {new Date(inv.expires_at).toLocaleDateString()}
+              </td>
               <td className="p-3 text-right">
                 {inv.status === "pending" && (
                   <Button size="sm" variant="ghost" onClick={() => revoke.mutate(inv.id)}>
@@ -386,8 +447,8 @@ function DangerZone() {
         <div className="flex-1">
           <div className="font-display text-lg">Revoke all non-founders</div>
           <p className="text-sm text-muted-foreground mb-3">
-            Removes every account that isn't a founder. Use this once to clean up accounts created before invites were
-            required. They can be re-invited any time.
+            Removes every account that isn't a founder. Use this once to clean up accounts created
+            before invites were required. They can be re-invited any time.
           </p>
           {!confirming ? (
             <Button variant="destructive" onClick={() => setConfirming(true)}>
@@ -395,8 +456,14 @@ function DangerZone() {
             </Button>
           ) : (
             <div className="space-y-2">
-              <Label className="text-xs">Type <code className="px-1 bg-muted rounded">REVOKE</code> to confirm</Label>
-              <Input value={typed} onChange={(e) => setTyped(e.target.value)} placeholder="REVOKE" />
+              <Label className="text-xs">
+                Type <code className="px-1 bg-muted rounded">REVOKE</code> to confirm
+              </Label>
+              <Input
+                value={typed}
+                onChange={(e) => setTyped(e.target.value)}
+                placeholder="REVOKE"
+              />
               <div className="flex gap-2">
                 <Button
                   variant="destructive"
@@ -405,7 +472,13 @@ function DangerZone() {
                 >
                   {purge.isPending ? "Removing…" : "Yes, remove them"}
                 </Button>
-                <Button variant="outline" onClick={() => { setConfirming(false); setTyped(""); }}>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setConfirming(false);
+                    setTyped("");
+                  }}
+                >
                   Cancel
                 </Button>
               </div>

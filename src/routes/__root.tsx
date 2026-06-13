@@ -80,20 +80,43 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Nabhya OS" },
-      { name: "description", content: "The single source of truth for Nabhya — leads, pilots, proof, applications and milestones in one view." },
+      {
+        name: "description",
+        content:
+          "The single source of truth for Nabhya — leads, pilots, proof, applications and milestones in one view.",
+      },
       { property: "og:title", content: "Nabhya OS" },
-      { property: "og:description", content: "The single source of truth for Nabhya — leads, pilots, proof, applications and milestones in one view." },
+      {
+        property: "og:description",
+        content:
+          "The single source of truth for Nabhya — leads, pilots, proof, applications and milestones in one view.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:title", content: "Nabhya OS" },
-      { name: "twitter:description", content: "The single source of truth for Nabhya — leads, pilots, proof, applications and milestones in one view." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/j85ti8754KXbNGQP3d5KDwhdvMl1/social-images/social-1780831792275-nabhya-logo.webp" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/j85ti8754KXbNGQP3d5KDwhdvMl1/social-images/social-1780831792275-nabhya-logo.webp" },
+      {
+        name: "twitter:description",
+        content:
+          "The single source of truth for Nabhya — leads, pilots, proof, applications and milestones in one view.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/j85ti8754KXbNGQP3d5KDwhdvMl1/social-images/social-1780831792275-nabhya-logo.webp",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/j85ti8754KXbNGQP3d5KDwhdvMl1/social-images/social-1780831792275-nabhya-logo.webp",
+      },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@500;600;700&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@500;600;700&display=swap",
+      },
       {
         rel: "stylesheet",
         href: appCss,
@@ -125,7 +148,9 @@ function RootComponent() {
   const router = useRouter();
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();

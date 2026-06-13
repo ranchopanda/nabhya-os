@@ -12,7 +12,13 @@ import { Search, FileText, CheckSquare, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { leadsQuery, tasksQuery, pilotsQuery, teamMembersQuery } from "@/lib/queries";
 
-export function GlobalSearch({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+export function GlobalSearch({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const navigate = useNavigate();
 
   // Fetch data for search (non-blocking, handled by React Query cache mostly)
@@ -32,7 +38,7 @@ export function GlobalSearch({ open, onOpenChange }: { open: boolean; onOpenChan
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
 
-        {(leads && leads.length > 0) && (
+        {leads && leads.length > 0 && (
           <CommandGroup heading="CRM Leads">
             {leads.slice(0, 5).map((lead) => (
               <CommandItem
@@ -42,13 +48,15 @@ export function GlobalSearch({ open, onOpenChange }: { open: boolean; onOpenChan
               >
                 <Users className="mr-2 h-4 w-4 text-muted-foreground" />
                 <span>{lead.company}</span>
-                {lead.contact_name && <span className="ml-2 text-xs text-muted-foreground">— {lead.contact_name}</span>}
+                {lead.contact_name && (
+                  <span className="ml-2 text-xs text-muted-foreground">— {lead.contact_name}</span>
+                )}
               </CommandItem>
             ))}
           </CommandGroup>
         )}
 
-        {(tasks && tasks.length > 0) && (
+        {tasks && tasks.length > 0 && (
           <CommandGroup heading="Tasks">
             {tasks.slice(0, 5).map((task) => (
               <CommandItem
@@ -63,7 +71,7 @@ export function GlobalSearch({ open, onOpenChange }: { open: boolean; onOpenChan
           </CommandGroup>
         )}
 
-        {(pilots && pilots.length > 0) && (
+        {pilots && pilots.length > 0 && (
           <CommandGroup heading="Pilots">
             {pilots.slice(0, 5).map((pilot) => (
               <CommandItem
@@ -77,8 +85,8 @@ export function GlobalSearch({ open, onOpenChange }: { open: boolean; onOpenChan
             ))}
           </CommandGroup>
         )}
-        
-        {(team && team.length > 0) && (
+
+        {team && team.length > 0 && (
           <CommandGroup heading="Team Members">
             {team.map((member) => (
               <CommandItem

@@ -16,20 +16,36 @@ import { Download, Edit, Plus, Search } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 export const Route = createFileRoute("/_authenticated/crm")({
-  head: () => ({ meta: [{ title: "CRM & Lead Pipeline · Nabhya OS" }, { name: "description", content: "Track every organization Nabhya is in conversation with." }] }),
-  loader: ({ context }) => { context.queryClient.ensureQueryData(leadsQuery); },
+  head: () => ({
+    meta: [
+      { title: "CRM & Lead Pipeline · Nabhya OS" },
+      { name: "description", content: "Track every organization Nabhya is in conversation with." },
+    ],
+  }),
+  loader: ({ context }) => {
+    context.queryClient.ensureQueryData(leadsQuery);
+  },
   component: CRMPage,
   errorComponent: ({ error }) => (
-    <AppShell><div className="p-10 text-sm text-destructive">Failed: {error.message}</div></AppShell>
+    <AppShell>
+      <div className="p-10 text-sm text-destructive">Failed: {error.message}</div>
+    </AppShell>
   ),
-  notFoundComponent: () => <AppShell><div className="p-10">Not found</div></AppShell>,
+  notFoundComponent: () => (
+    <AppShell>
+      <div className="p-10">Not found</div>
+    </AppShell>
+  ),
 });
 
 function CRMPage() {
   const { canEdit, isFounder } = useCurrentRole();
   const { data: leads } = useSuspenseQuery(leadsQuery);
 
-  const lastUpdated = leads.length > 0 ? formatDistanceToNow(new Date(leads[0].updated_at || leads[0].created_at)) + " ago" : null;
+  const lastUpdated =
+    leads.length > 0
+      ? formatDistanceToNow(new Date(leads[0].updated_at || leads[0].created_at)) + " ago"
+      : null;
 
   const handleExport = () => {
     exportToCSV("nabhya_leads", leads, [
@@ -62,7 +78,13 @@ function CRMPage() {
                 </Button>
               )}
               {canEdit ? (
-                <LeadDialog trigger={<Button size="sm"><Plus className="h-4 w-4" /> Add Lead</Button>} />
+                <LeadDialog
+                  trigger={
+                    <Button size="sm">
+                      <Plus className="h-4 w-4" /> Add Lead
+                    </Button>
+                  }
+                />
               ) : null}
             </div>
           }
@@ -84,14 +106,14 @@ function CRMContent() {
   const filtered = useMemo(() => {
     let result = leads;
     if (activeStatus) {
-      result = result.filter(l => l.status === activeStatus);
+      result = result.filter((l) => l.status === activeStatus);
     }
     const needle = q.trim().toLowerCase();
     if (needle) {
       result = result.filter((l) =>
         [l.company, l.contact_name, l.email, l.notes, l.next_action]
           .filter(Boolean)
-          .some((v) => (v as string).toLowerCase().includes(needle))
+          .some((v) => (v as string).toLowerCase().includes(needle)),
       );
     }
     return result;
@@ -125,7 +147,12 @@ function CRMContent() {
           className="rounded-full"
         >
           All
-          <Badge variant="secondary" className="ml-2 bg-background/50 hover:bg-background/50 text-foreground">{leads.length}</Badge>
+          <Badge
+            variant="secondary"
+            className="ml-2 bg-background/50 hover:bg-background/50 text-foreground"
+          >
+            {leads.length}
+          </Badge>
         </Button>
         {LEAD_STATUSES.map((s) => (
           <Button
@@ -136,7 +163,12 @@ function CRMContent() {
             className="rounded-full"
           >
             {s}
-            <Badge variant="secondary" className="ml-2 bg-background/50 hover:bg-background/50 text-foreground">{counts.get(s) ?? 0}</Badge>
+            <Badge
+              variant="secondary"
+              className="ml-2 bg-background/50 hover:bg-background/50 text-foreground"
+            >
+              {counts.get(s) ?? 0}
+            </Badge>
           </Button>
         ))}
       </div>
@@ -150,19 +182,42 @@ function CRMContent() {
         </div>
         {filtered.length === 0 ? (
           <div className="px-5 py-12 text-center text-sm text-muted-foreground">
-            {leads.length === 0 ? "No leads yet. Add your first lead to start tracking the pipeline." : "No leads match your search."}
+            {leads.length === 0
+              ? "No leads yet. Add your first lead to start tracking the pipeline."
+              : "No leads match your search."}
           </div>
         ) : (
           filtered.map((l) => (
-            <div key={l.id} className="grid grid-cols-12 px-5 py-4 border-b last:border-0 items-center hover:bg-accent/40 transition-colors">
+            <div
+              key={l.id}
+              className="grid grid-cols-12 px-5 py-4 border-b last:border-0 items-center hover:bg-accent/40 transition-colors"
+            >
               <div className="col-span-4 font-medium truncate">{l.company}</div>
               <div className="col-span-3 text-sm text-muted-foreground truncate">
-                {l.contact_name ?? "—"}{l.email ? <span className="block text-xs">{l.email}</span> : null}
+                {l.contact_name ?? "—"}
+                {l.email ? <span className="block text-xs">{l.email}</span> : null}
               </div>
-              <div className="col-span-3"><Badge variant="secondary">{l.status}</Badge></div>
+              <div className="col-span-3">
+                <Badge variant="secondary">{l.status}</Badge>
+              </div>
               <div className="col-span-2 flex items-center justify-end gap-1">
-                {canEdit ? <LeadDialog lead={l} trigger={<Button size="icon" variant="ghost" aria-label="Edit lead"><Edit className="h-4 w-4" /></Button>} /> : <span className="text-sm text-muted-foreground truncate mr-auto">{l.next_action ?? "—"}</span>}
-                {isFounder ? <DeleteButton table="leads" id={l.id} queryKey={["leads"]} label="lead" /> : null}
+                {canEdit ? (
+                  <LeadDialog
+                    lead={l}
+                    trigger={
+                      <Button size="icon" variant="ghost" aria-label="Edit lead">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    }
+                  />
+                ) : (
+                  <span className="text-sm text-muted-foreground truncate mr-auto">
+                    {l.next_action ?? "—"}
+                  </span>
+                )}
+                {isFounder ? (
+                  <DeleteButton table="leads" id={l.id} queryKey={["leads"]} label="lead" />
+                ) : null}
               </div>
             </div>
           ))

@@ -12,11 +12,26 @@ import { useCurrentRole } from "@/hooks/use-current-role";
 import { Edit, Plus } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/applications")({
-  head: () => ({ meta: [{ title: "Application Tracker · Nabhya OS" }, { name: "description", content: "Incubators, grants, competitions and accelerators." }] }),
-  loader: ({ context }) => { context.queryClient.ensureQueryData(applicationsQuery); },
+  head: () => ({
+    meta: [
+      { title: "Application Tracker · Nabhya OS" },
+      { name: "description", content: "Incubators, grants, competitions and accelerators." },
+    ],
+  }),
+  loader: ({ context }) => {
+    context.queryClient.ensureQueryData(applicationsQuery);
+  },
   component: AppsPage,
-  errorComponent: ({ error }) => <AppShell><div className="p-10 text-sm text-destructive">Failed: {error.message}</div></AppShell>,
-  notFoundComponent: () => <AppShell><div className="p-10">Not found</div></AppShell>,
+  errorComponent: ({ error }) => (
+    <AppShell>
+      <div className="p-10 text-sm text-destructive">Failed: {error.message}</div>
+    </AppShell>
+  ),
+  notFoundComponent: () => (
+    <AppShell>
+      <div className="p-10">Not found</div>
+    </AppShell>
+  ),
 });
 
 const tone: Record<string, string> = {
@@ -34,9 +49,20 @@ function AppsPage() {
     <AppShell>
       <div className="px-6 lg:px-10 py-8 max-w-[1400px] mx-auto">
         <PageHeader
-          eyebrow="Module 6" title="Application Tracker"
+          eyebrow="Module 6"
+          title="Application Tracker"
           description="Every program Nabhya is pursuing."
-          action={canEdit ? <ApplicationDialog trigger={<Button size="sm"><Plus className="h-4 w-4" /> Add Application</Button>} /> : undefined}
+          action={
+            canEdit ? (
+              <ApplicationDialog
+                trigger={
+                  <Button size="sm">
+                    <Plus className="h-4 w-4" /> Add Application
+                  </Button>
+                }
+              />
+            ) : undefined
+          }
         />
         <Suspense fallback={<Skeleton className="h-96" />}>
           <AppsContent />
@@ -56,30 +82,65 @@ function AppsContent() {
     <>
       <div className="flex flex-wrap gap-2 mb-5">
         {APPLICATION_STAGES.map((s) => (
-          <span key={s} className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border bg-card">
+          <span
+            key={s}
+            className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border bg-card"
+          >
             {s} <span className="text-muted-foreground">{counts.get(s) ?? 0}</span>
           </span>
         ))}
       </div>
       <Card>
         {apps.length === 0 ? (
-          <div className="px-5 py-12 text-center text-sm text-muted-foreground">No applications yet.</div>
-        ) : apps.map((a) => (
-          <div key={a.id} className="px-5 py-4 border-b last:border-0 grid grid-cols-12 items-center gap-4">
-            <div className="col-span-5">
-              <div className="font-medium">{a.name}</div>
-              <div className="text-sm text-muted-foreground">{a.organizer ?? "—"}{a.category ? ` · ${a.category}` : ""}</div>
-            </div>
-            <div className="col-span-3">
-              <span className={`text-xs px-2 py-1 rounded-full ${tone[a.stage] ?? "bg-muted"}`}>{a.stage}</span>
-            </div>
-            <div className="col-span-2 text-sm text-muted-foreground">{a.date_applied ? `Applied ${a.date_applied}` : "—"}</div>
-            <div className="col-span-2 flex items-center justify-end gap-1">
-              {canEdit ? <ApplicationDialog application={a} trigger={<Button size="icon" variant="ghost" aria-label="Edit application"><Edit className="h-4 w-4" /></Button>} /> : <span className="text-sm truncate">{a.result ?? a.remarks ?? ""}</span>}
-              {isFounder ? <DeleteButton table="applications" id={a.id} queryKey={["applications"]} label="application" /> : null}
-            </div>
+          <div className="px-5 py-12 text-center text-sm text-muted-foreground">
+            No applications yet.
           </div>
-        ))}
+        ) : (
+          apps.map((a) => (
+            <div
+              key={a.id}
+              className="px-5 py-4 border-b last:border-0 grid grid-cols-12 items-center gap-4"
+            >
+              <div className="col-span-5">
+                <div className="font-medium">{a.name}</div>
+                <div className="text-sm text-muted-foreground">
+                  {a.organizer ?? "—"}
+                  {a.category ? ` · ${a.category}` : ""}
+                </div>
+              </div>
+              <div className="col-span-3">
+                <span className={`text-xs px-2 py-1 rounded-full ${tone[a.stage] ?? "bg-muted"}`}>
+                  {a.stage}
+                </span>
+              </div>
+              <div className="col-span-2 text-sm text-muted-foreground">
+                {a.date_applied ? `Applied ${a.date_applied}` : "—"}
+              </div>
+              <div className="col-span-2 flex items-center justify-end gap-1">
+                {canEdit ? (
+                  <ApplicationDialog
+                    application={a}
+                    trigger={
+                      <Button size="icon" variant="ghost" aria-label="Edit application">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    }
+                  />
+                ) : (
+                  <span className="text-sm truncate">{a.result ?? a.remarks ?? ""}</span>
+                )}
+                {isFounder ? (
+                  <DeleteButton
+                    table="applications"
+                    id={a.id}
+                    queryKey={["applications"]}
+                    label="application"
+                  />
+                ) : null}
+              </div>
+            </div>
+          ))
+        )}
       </Card>
     </>
   );

@@ -15,7 +15,8 @@ export const validateInvite = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     if (!row) return { valid: false as const, reason: "not_found" as const };
     if (row.status !== "pending") return { valid: false as const, reason: row.status as string };
-    if (new Date(row.expires_at) <= new Date()) return { valid: false as const, reason: "expired" as const };
+    if (new Date(row.expires_at) <= new Date())
+      return { valid: false as const, reason: "expired" as const };
     return { valid: true as const, email: row.email, role: row.role as string };
   });
 
@@ -57,7 +58,13 @@ export const redeemInviteWithPassword = createServerFn({ method: "POST" })
 
 export const redeemInviteAfterOAuth = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
-    z.object({ token: z.string().min(8).max(200), userId: z.string().uuid(), email: z.string().email() }).parse(d),
+    z
+      .object({
+        token: z.string().min(8).max(200),
+        userId: z.string().uuid(),
+        email: z.string().email(),
+      })
+      .parse(d),
   )
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

@@ -9,7 +9,11 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import logo from "@/assets/nabhya-logo.asset.json";
 import { useServerFn } from "@tanstack/react-start";
-import { validateInvite, redeemInviteWithPassword, redeemInviteAfterOAuth } from "@/lib/invite-redeem.functions";
+import {
+  validateInvite,
+  redeemInviteWithPassword,
+  redeemInviteAfterOAuth,
+} from "@/lib/invite-redeem.functions";
 
 const INVITE_STORAGE_KEY = "nabhya:invite-token";
 
@@ -89,9 +93,7 @@ function AuthPage() {
         } catch (e) {
           await supabase.auth.signOut();
           toast.error(
-            e instanceof Error
-              ? e.message
-              : "This Google account doesn't match the invite email.",
+            e instanceof Error ? e.message : "This Google account doesn't match the invite email.",
           );
         }
         return;
@@ -136,7 +138,9 @@ function AuthPage() {
   async function handleGoogle() {
     setLoading(true);
     if (inviteToken) sessionStorage.setItem(INVITE_STORAGE_KEY, inviteToken);
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/auth" });
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: window.location.origin + "/auth",
+    });
     if (result.error) {
       toast.error("Google sign-in failed");
       sessionStorage.removeItem(INVITE_STORAGE_KEY);
@@ -167,8 +171,8 @@ function AuthPage() {
             <h1 className="font-display text-2xl font-semibold mb-1">Accept your invite</h1>
             {invite ? (
               <p className="text-sm text-muted-foreground mb-6">
-                You're joining as <span className="font-medium text-foreground">{invite.role}</span> with{" "}
-                <span className="font-medium text-foreground">{invite.email}</span>.
+                You're joining as <span className="font-medium text-foreground">{invite.role}</span>{" "}
+                with <span className="font-medium text-foreground">{invite.email}</span>.
               </p>
             ) : inviteError ? (
               <p className="text-sm text-destructive mb-6">{inviteError}</p>
@@ -178,16 +182,28 @@ function AuthPage() {
 
             {invite && (
               <>
-                <Button type="button" variant="outline" className="w-full" onClick={handleGoogle} disabled={loading}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleGoogle}
+                  disabled={loading}
+                >
                   Continue with Google ({invite.email})
                 </Button>
                 <div className="flex items-center gap-3 my-5 text-xs text-muted-foreground">
-                  <div className="flex-1 h-px bg-border" /> OR <div className="flex-1 h-px bg-border" />
+                  <div className="flex-1 h-px bg-border" /> OR{" "}
+                  <div className="flex-1 h-px bg-border" />
                 </div>
                 <form onSubmit={handleAcceptInvite} className="space-y-3">
                   <div>
                     <Label htmlFor="name">Display name</Label>
-                    <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
+                    <Input
+                      id="name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Your name"
+                    />
                   </div>
                   <div>
                     <Label htmlFor="email">Email</Label>
@@ -228,7 +244,13 @@ function AuthPage() {
               Sign in with your Nabhya OS account. New accounts are invite-only.
             </p>
 
-            <Button type="button" variant="outline" className="w-full" onClick={handleGoogle} disabled={loading}>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleGoogle}
+              disabled={loading}
+            >
               Continue with Google
             </Button>
 
@@ -239,7 +261,13 @@ function AuthPage() {
             <form onSubmit={handleSignIn} className="space-y-3">
               <div>
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                <Input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
               </div>
               <div>
                 <Label htmlFor="password">Password</Label>

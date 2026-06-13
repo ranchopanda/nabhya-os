@@ -1,11 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  convertToModelMessages,
-  streamText,
-  stepCountIs,
-  tool,
-  type UIMessage,
-} from "ai";
+import { convertToModelMessages, streamText, stepCountIs, tool, type UIMessage } from "ai";
 import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
@@ -37,22 +31,30 @@ function buildTools(supabase: SupabaseUserClient) {
       description:
         "Search and list CRM leads. Optionally filter by status or a free-text query that matches company, contact name, or email.",
       inputSchema: z.object({
-        query: z.string().max(200).optional().describe("free-text match on company, contact, email"),
-        status: z.string().max(60).optional().describe("e.g. Cold, Contacted, Replied, Meeting Scheduled, Pilot Active, Customer"),
+        query: z
+          .string()
+          .max(200)
+          .optional()
+          .describe("free-text match on company, contact, email"),
+        status: z
+          .string()
+          .max(60)
+          .optional()
+          .describe("e.g. Cold, Contacted, Replied, Meeting Scheduled, Pilot Active, Customer"),
         limit: z.number().int().min(1).max(50).default(25),
       }),
       execute: async ({ query, status, limit }) => {
         let q = supabase
           .from("leads")
-          .select("id, company, contact_name, email, category, status, next_action, follow_up_date, updated_at")
+          .select(
+            "id, company, contact_name, email, category, status, next_action, follow_up_date, updated_at",
+          )
           .order("updated_at", { ascending: false })
           .limit(limit);
         if (status) q = q.eq("status", status);
         if (query) {
           const safe = query.replace(/[%,]/g, " ").trim();
-          q = q.or(
-            `company.ilike.%${safe}%,contact_name.ilike.%${safe}%,email.ilike.%${safe}%`,
-          );
+          q = q.or(`company.ilike.%${safe}%,contact_name.ilike.%${safe}%,email.ilike.%${safe}%`);
         }
         const { data, error } = await q;
         if (error) return { error: error.message };
@@ -68,7 +70,9 @@ function buildTools(supabase: SupabaseUserClient) {
       execute: async ({ status }) => {
         let q = supabase
           .from("pilots")
-          .select("id, name, organization, status, progress, start_date, end_date, objectives, results, updated_at")
+          .select(
+            "id, name, organization, status, progress, start_date, end_date, objectives, results, updated_at",
+          )
           .order("updated_at", { ascending: false })
           .limit(100);
         if (status) q = q.eq("status", status);
@@ -79,7 +83,8 @@ function buildTools(supabase: SupabaseUserClient) {
     }),
 
     listTasks: tool({
-      description: "List tasks. Optionally filter by status (Backlog, This Week, In Progress, Review, Done).",
+      description:
+        "List tasks. Optionally filter by status (Backlog, This Week, In Progress, Review, Done).",
       inputSchema: z.object({
         status: z.string().max(60).optional(),
         limit: z.number().int().min(1).max(100).default(50),
@@ -159,7 +164,9 @@ function buildTools(supabase: SupabaseUserClient) {
       execute: async ({ platform, status }) => {
         let q = supabase
           .from("content_posts")
-          .select("id, platform, topic, format, publish_date, status, reach, likes, comments, saves")
+          .select(
+            "id, platform, topic, format, publish_date, status, reach, likes, comments, saves",
+          )
           .order("publish_date", { ascending: false, nullsFirst: false })
           .limit(100);
         if (platform) q = q.eq("platform", platform);
@@ -171,7 +178,8 @@ function buildTools(supabase: SupabaseUserClient) {
     }),
 
     listProofDocuments: tool({
-      description: "List proof vault documents and uploaded files. kind='vault' for proof vault items, 'document' for general documents.",
+      description:
+        "List proof vault documents and uploaded files. kind='vault' for proof vault items, 'document' for general documents.",
       inputSchema: z.object({
         kind: z.enum(["vault", "document"]).default("vault"),
         category: z.string().max(40).optional(),
@@ -212,15 +220,27 @@ function buildTools(supabase: SupabaseUserClient) {
           supabase.from("leads").select("status", { count: "exact" }),
           supabase.from("pilots").select("status, progress"),
           supabase.from("applications").select("stage"),
-          supabase.from("proof_documents").select("id", { count: "exact", head: true }).in("category", ["Award", "Awards"]),
-          supabase.from("milestones").select("id, title, occurred_on").order("occurred_on", { ascending: false }).limit(5),
-          supabase.from("tasks").select("status").gte("updated_at", new Date(Date.now() - 7 * 86400000).toISOString()),
+          supabase
+            .from("proof_documents")
+            .select("id", { count: "exact", head: true })
+            .in("category", ["Award", "Awards"]),
+          supabase
+            .from("milestones")
+            .select("id, title, occurred_on")
+            .order("occurred_on", { ascending: false })
+            .limit(5),
+          supabase
+            .from("tasks")
+            .select("status")
+            .gte("updated_at", new Date(Date.now() - 7 * 86400000).toISOString()),
         ]);
 
         const leadsByStatus: Record<string, number> = {};
-        for (const r of leads.data ?? []) leadsByStatus[r.status] = (leadsByStatus[r.status] ?? 0) + 1;
+        for (const r of leads.data ?? [])
+          leadsByStatus[r.status] = (leadsByStatus[r.status] ?? 0) + 1;
         const pilotsByStatus: Record<string, number> = {};
-        for (const r of pilots.data ?? []) pilotsByStatus[r.status] = (pilotsByStatus[r.status] ?? 0) + 1;
+        for (const r of pilots.data ?? [])
+          pilotsByStatus[r.status] = (pilotsByStatus[r.status] ?? 0) + 1;
         const appsByStage: Record<string, number> = {};
         for (const r of apps.data ?? []) appsByStage[r.stage] = (appsByStage[r.stage] ?? 0) + 1;
 

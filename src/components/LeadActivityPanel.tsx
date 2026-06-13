@@ -13,7 +13,7 @@ export function LeadActivityPanel({ leadId }: { leadId: string }) {
         .select("*")
         .eq("lead_id", leadId)
         .order("created_at", { ascending: false });
-      
+
       if (error) {
         console.warn("lead_activities table may not exist yet.", error);
         return [] as LeadActivity[];
@@ -27,20 +27,31 @@ export function LeadActivityPanel({ leadId }: { leadId: string }) {
 
   return (
     <div className="mt-4 pt-4 border-t">
-      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Activity Timeline</h4>
+      <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+        Activity Timeline
+      </h4>
       <div className="space-y-3">
         {activities.map((a) => (
           <div key={a.id} className="flex gap-3 text-sm">
             <div className="h-2 w-2 mt-1.5 rounded-full bg-brand-green/40 shrink-0" />
             <div>
               <div className="text-xs text-muted-foreground">
-                {new Date(a.created_at).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                {new Date(a.created_at).toLocaleString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                  hour: "numeric",
+                  minute: "2-digit",
+                })}
               </div>
               <div className="mt-0.5">
                 <span className="font-medium text-foreground">{a.actor_name}</span>{" "}
                 <span className="text-muted-foreground">{a.action}</span>
               </div>
-              {a.detail && <div className="text-xs text-muted-foreground mt-1 bg-muted/50 p-2 rounded">{a.detail}</div>}
+              {a.detail && (
+                <div className="text-xs text-muted-foreground mt-1 bg-muted/50 p-2 rounded">
+                  {a.detail}
+                </div>
+              )}
             </div>
           </div>
         ))}

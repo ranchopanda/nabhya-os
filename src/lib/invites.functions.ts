@@ -6,7 +6,12 @@ import { randomBytes, createHash } from "crypto";
 const ROLES = ["founder", "team", "investor"] as const;
 
 async function assertFounder(supabase: any, userId: string) {
-  const { data, error } = await supabase.rpc("has_role", { _user_id: userId, _role: "founder" });
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "founder")
+    .maybeSingle();
   if (error) throw new Error(`Permission check failed: ${error.message}`);
   if (!data) throw new Error("Only founders can do this. Your account isn't a founder.");
 }
@@ -53,12 +58,13 @@ export const createInvite = createServerFn({ method: "POST" })
       .gt("expires_at", new Date().toISOString())
       .maybeSingle();
     if (dupe) {
-      throw new Error("A pending invite already exists for this email. Revoke it first or use 'New link'.");
+      throw new Error(
+        "A pending invite already exists for this email. Revoke it first or use 'New link'.",
+      );
     }
 
     const { raw, hash } = makeToken();
     const expiresAt = new Date(Date.now() + data.expiresInDays * 24 * 60 * 60 * 1000).toISOString();
-
 
     const { data: row, error } = await supabaseAdmin
       .from("invites")
@@ -115,7 +121,9 @@ export const revokeInvite = createServerFn({ method: "POST" })
 export const resendInvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({ id: z.string().uuid(), expiresInDays: z.number().int().min(1).max(365).default(7) }).parse(d),
+    z
+      .object({ id: z.string().uuid(), expiresInDays: z.number().int().min(1).max(365).default(7) })
+      .parse(d),
   )
   .handler(async ({ data, context }) => {
     await assertFounder(context.supabase, context.userId);
@@ -125,7 +133,13 @@ export const resendInvite = createServerFn({ method: "POST" })
     const expiresAt = new Date(Date.now() + data.expiresInDays * 24 * 60 * 60 * 1000).toISOString();
     const { data: row, error } = await supabaseAdmin
       .from("invites")
-      .update({ token_hash: hash, expires_at: expiresAt, status: "pending", accepted_at: null, accepted_by: null })
+      .update({
+        token_hash: hash,
+        expires_at: expiresAt,
+        status: "pending",
+        accepted_at: null,
+        accepted_by: null,
+      })
       .eq("id", data.id)
       .in("status", ["pending", "expired", "revoked"])
       .select("id, email, role, expires_at, status, created_at")
