@@ -282,7 +282,7 @@ function InvitesSection() {
                     min={1}
                     max={365}
                     value={expiresInDays}
-                    onChange={(e) => setExpiresInDays(Number(e.target.value) || 7)}
+                    onChange={(e) => setExpiresInDays(e.target.value)}
                   />
                 </div>
               </div>
