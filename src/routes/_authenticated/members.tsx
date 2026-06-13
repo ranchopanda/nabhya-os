@@ -198,7 +198,7 @@ function InvitesSection() {
   };
 
   const create = useMutation({
-    mutationFn: async () => createFn({ data: { email, role, expiresInDays } }),
+    mutationFn: async () => createFn({ data: { email, role, expiresInDays: Math.min(365, Math.max(1, parseInt(expiresInDays, 10) || 7)) } }),
     onSuccess: ({ token }) => {
       const url = `${window.location.origin}/auth?invite=${token}`;
       copyLink(url);
