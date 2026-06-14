@@ -45,6 +45,16 @@ function AuthPage() {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
+  async function hasAssignedRole(userId: string) {
+    const { data, error } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .limit(1);
+    if (error) throw error;
+    return (data ?? []).length > 0;
+  }
+
   // 1) Parse ?invite=… and stored token; validate
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -98,6 +108,11 @@ function AuthPage() {
         }
         return;
       }
+      if (!(await hasAssignedRole(data.session.user.id))) {
+        await supabase.auth.signOut();
+        toast.error("Your account needs an invite before you can sign in.");
+        return;
+      }
       navigate({ to: "/" });
     })();
   }, [navigate, redeemOAuth]);
@@ -108,6 +123,11 @@ function AuthPage() {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
+      const { data } = await supabase.auth.getUser();
+      if (data.user && !(await hasAssignedRole(data.user.id))) {
+        await supabase.auth.signOut();
+        throw new Error("Your account needs an invite before you can sign in.");
+      }
       navigate({ to: "/" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Sign in failed");

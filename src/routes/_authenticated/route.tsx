@@ -7,12 +7,12 @@ export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async ({ location }) => {
     const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    if (!session) {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+    if (error || !user) {
       throw redirect({ to: "/auth" });
     }
-    const user = session.user;
 
     // Determine role from user_roles table
     const { data: roleRows } = await supabase
@@ -21,11 +21,15 @@ export const Route = createFileRoute("/_authenticated")({
       .eq("user_id", user.id);
 
     const roles = (roleRows ?? []).map((r: any) => r.role as string);
+    if (roles.length === 0) {
+      await supabase.auth.signOut();
+      throw redirect({ to: "/auth" });
+    }
     const role = roles.includes("founder")
       ? "founder"
       : roles.includes("team")
         ? "team"
-        : (roles[0] ?? "investor");
+        : roles[0];
 
     // Block investors from non-allowed routes
     if (role === "investor" && !investorAllowedRoutes.includes(location.pathname)) {
