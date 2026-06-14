@@ -44,7 +44,6 @@ export const redeemInviteWithPassword = createServerFn({ method: "POST" })
     if (inv.status !== "pending") throw new Error(`Invite ${inv.status}`);
     if (new Date(inv.expires_at) <= new Date()) throw new Error("Invite expired");
 
-    // Create the user (email-confirmed) — trigger will assign role from invite
     const { data: created, error: cErr } = await supabaseAdmin.auth.admin.createUser({
       email: inv.email,
       password: data.password,
@@ -52,6 +51,26 @@ export const redeemInviteWithPassword = createServerFn({ method: "POST" })
       user_metadata: { display_name: data.displayName ?? inv.email.split("@")[0] },
     });
     if (cErr) throw new Error(cErr.message);
+    if (!created.user?.id) throw new Error("Could not create member account");
+
+    const displayName = data.displayName ?? inv.email.split("@")[0];
+    const { error: profileErr } = await supabaseAdmin.from("profiles").upsert({
+      id: created.user.id,
+      email: inv.email.toLowerCase(),
+      display_name: displayName,
+    });
+    if (profileErr) throw new Error(profileErr.message);
+
+    const { error: roleErr } = await supabaseAdmin
+      .from("user_roles")
+      .insert({ user_id: created.user.id, role: inv.role });
+    if (roleErr) throw new Error(roleErr.message);
+
+    const { error: acceptErr } = await supabaseAdmin
+      .from("invites")
+      .update({ status: "accepted", accepted_by: created.user.id, accepted_at: new Date().toISOString() })
+      .eq("id", inv.id);
+    if (acceptErr) throw new Error(acceptErr.message);
 
     return { ok: true, email: inv.email, userId: created.user?.id };
   });
@@ -75,6 +94,12 @@ export const redeemInviteAfterOAuth = createServerFn({ method: "POST" })
         _email: data.email,
       });
       if (error) throw new Error(error.message);
+      const { error: profileErr } = await supabaseAdmin.from("profiles").upsert({
+        id: data.userId,
+        email: data.email.toLowerCase(),
+        display_name: data.email.split("@")[0],
+      });
+      if (profileErr) throw new Error(profileErr.message);
       return { ok: true, role };
     } catch (e) {
       // Mismatch or invalid → delete the just-created auth user so they don't linger
