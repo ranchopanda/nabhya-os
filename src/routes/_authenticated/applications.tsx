@@ -99,24 +99,24 @@ function AppsContent() {
           apps.map((a) => (
             <div
               key={a.id}
-              className="px-5 py-4 border-b last:border-0 grid grid-cols-12 items-center gap-4"
+              className="px-5 py-4 border-b last:border-0 flex flex-col md:grid md:grid-cols-12 md:items-center gap-3 md:gap-4"
             >
-              <div className="col-span-5">
+              <div className="md:col-span-5">
                 <div className="font-medium">{a.name}</div>
                 <div className="text-sm text-muted-foreground">
                   {a.organizer ?? "—"}
                   {a.category ? ` · ${a.category}` : ""}
                 </div>
               </div>
-              <div className="col-span-3">
+              <div className="md:col-span-3">
                 <span className={`text-xs px-2 py-1 rounded-full ${tone[a.stage] ?? "bg-muted"}`}>
                   {a.stage}
                 </span>
               </div>
-              <div className="col-span-2 text-sm text-muted-foreground">
+              <div className="md:col-span-2 text-sm text-muted-foreground">
                 {a.date_applied ? `Applied ${a.date_applied}` : "—"}
               </div>
-              <div className="col-span-2 flex items-center justify-end gap-1">
+              <div className="md:col-span-2 flex items-center md:justify-end gap-1 mt-2 md:mt-0">
                 {canEdit ? (
                   <ApplicationDialog
                     application={a}

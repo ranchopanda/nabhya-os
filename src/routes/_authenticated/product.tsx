@@ -109,25 +109,28 @@ function ProductBody() {
           filtered.map((u) => (
             <div
               key={u.id}
-              className="px-5 py-4 border-b last:border-0 grid grid-cols-12 items-center gap-4 hover:bg-accent/40 transition-colors"
+              className="px-5 py-4 border-b last:border-0 flex flex-col md:grid md:grid-cols-12 md:items-center gap-3 md:gap-4 hover:bg-accent/40 transition-colors"
             >
-              <div className="col-span-2 text-sm text-muted-foreground">
+              <div className="md:col-span-2 text-sm text-muted-foreground">
                 {new Date(u.occurred_on).toLocaleDateString(undefined, {
                   month: "short",
                   day: "numeric",
                 })}
               </div>
-              <div className="col-span-4">
+              <div className="md:col-span-4">
                 <div className="font-medium">{u.feature}</div>
                 <div className="text-sm text-muted-foreground">
                   {u.impact ?? u.description ?? ""}
                 </div>
               </div>
-              <div className="col-span-2">
+              <div className="md:col-span-2">
                 {u.category && <Badge variant="secondary">{u.category}</Badge>}
               </div>
-              <div className="col-span-2 text-sm">{u.owner_name ?? "—"}</div>
-              <div className="col-span-2 flex items-center justify-end gap-1">
+              <div className="md:col-span-2 text-sm">
+                <span className="md:hidden mr-2 text-muted-foreground">Owner:</span>
+                {u.owner_name ?? "—"}
+              </div>
+              <div className="md:col-span-2 flex items-center md:justify-end gap-1 mt-2 md:mt-0">
                 {canEdit && (
                   <ProductUpdateDialog
                     update={u}

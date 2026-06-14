@@ -176,16 +176,17 @@ function ContentBody() {
           posts.map((p) => (
             <div
               key={p.id}
-              className="px-5 py-4 border-b last:border-0 grid grid-cols-12 items-center gap-4"
+              className="px-5 py-4 border-b last:border-0 flex flex-col md:grid md:grid-cols-12 md:items-center gap-3 md:gap-4"
             >
-              <div className="col-span-2">
+              <div className="md:col-span-2">
                 <Badge variant="outline">{p.platform}</Badge>
               </div>
-              <div className="col-span-6 font-medium truncate">{p.topic}</div>
-              <div className="col-span-2">
+              <div className="md:col-span-6 font-medium truncate">{p.topic}</div>
+              <div className="md:col-span-2">
                 <Badge variant="secondary">{p.status}</Badge>
               </div>
-              <div className="col-span-2 text-right text-sm">
+              <div className="md:col-span-2 md:text-right text-sm text-muted-foreground md:text-foreground">
+                <span className="md:hidden mr-2">Reach:</span>
                 {(p.reach ?? 0) > 0 ? p.reach!.toLocaleString() : "—"}
               </div>
             </div>

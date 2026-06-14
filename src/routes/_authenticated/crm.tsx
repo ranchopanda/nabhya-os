@@ -174,11 +174,11 @@ function CRMContent() {
       </div>
 
       <Card>
-        <div className="grid grid-cols-12 px-5 py-3 border-b text-xs font-medium text-muted-foreground uppercase tracking-wider">
+        <div className="hidden md:grid grid-cols-12 px-5 py-3 border-b text-xs font-medium text-muted-foreground uppercase tracking-wider">
           <div className="col-span-4">Company</div>
           <div className="col-span-3">Contact</div>
           <div className="col-span-3">Status</div>
-          <div className="col-span-2">Actions</div>
+          <div className="col-span-2 text-right">Actions</div>
         </div>
         {filtered.length === 0 ? (
           <div className="px-5 py-12 text-center text-sm text-muted-foreground">
@@ -190,17 +190,22 @@ function CRMContent() {
           filtered.map((l) => (
             <div
               key={l.id}
-              className="grid grid-cols-12 px-5 py-4 border-b last:border-0 items-center hover:bg-accent/40 transition-colors"
+              className="flex flex-col md:grid md:grid-cols-12 px-5 py-4 border-b last:border-0 md:items-center gap-3 md:gap-0 hover:bg-accent/40 transition-colors"
             >
-              <div className="col-span-4 font-medium truncate">{l.company}</div>
-              <div className="col-span-3 text-sm text-muted-foreground truncate">
+              <div className="md:col-span-4 font-medium truncate flex items-center justify-between">
+                <span>{l.company}</span>
+                <Badge variant="secondary" className="md:hidden">
+                  {l.status}
+                </Badge>
+              </div>
+              <div className="md:col-span-3 text-sm text-muted-foreground truncate">
                 {l.contact_name ?? "—"}
                 {l.email ? <span className="block text-xs">{l.email}</span> : null}
               </div>
-              <div className="col-span-3">
+              <div className="hidden md:block md:col-span-3">
                 <Badge variant="secondary">{l.status}</Badge>
               </div>
-              <div className="col-span-2 flex items-center justify-end gap-1">
+              <div className="md:col-span-2 flex items-center md:justify-end gap-1 mt-2 md:mt-0">
                 {canEdit ? (
                   <LeadDialog
                     lead={l}
