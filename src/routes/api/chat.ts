@@ -246,20 +246,24 @@ function buildTools(supabase: SupabaseUserClient, canEdit: boolean, actorName: s
         assignee_user_id: z.string().uuid().nullable().optional(),
       }),
       execute: async (input) => {
-        const { assignee_user_id, ...rest } = input;
-        const patch: Record<string, unknown> = { ...rest };
-        if (assignee_user_id !== undefined) patch.assignee_id = assignee_user_id;
-        if (input.id) {
-          const { id, ...p } = patch;
-          void id;
-          const { data, error } = await supabase.from("tasks").update(p).eq("id", input.id).select().single();
+        const { assignee_user_id, id, title, ...rest } = input;
+        const base: Record<string, string | number | null> = {};
+        for (const [k, v] of Object.entries(rest)) if (v !== undefined) base[k] = v as string | number | null;
+        if (assignee_user_id !== undefined) base.assignee_id = assignee_user_id;
+        if (id) {
+          const { data, error } = await supabase
+            .from("tasks")
+            .update(base as never)
+            .eq("id", id)
+            .select()
+            .single();
           if (error) return { error: error.message };
           return { ok: true, id: data.id, action: "updated", title: data.title };
         }
-        if (!input.title) return { error: "title is required to create a task" };
+        if (!title) return { error: "title is required to create a task" };
         const { data, error } = await supabase
           .from("tasks")
-          .insert({ ...patch, title: input.title })
+          .insert({ ...(base as never), title })
           .select()
           .single();
         if (error) return { error: error.message };
