@@ -263,7 +263,7 @@ function buildTools(supabase: SupabaseUserClient, canEdit: boolean, actorName: s
         if (!title) return { error: "title is required to create a task" };
         const { data, error } = await supabase
           .from("tasks")
-          .insert({ ...(base as never), title })
+          .insert({ ...base, title } as never)
           .select()
           .single();
         if (error) return { error: error.message };
