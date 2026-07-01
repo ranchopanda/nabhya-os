@@ -20,11 +20,11 @@ export const Route = createFileRoute("/_authenticated/copilot")({
 });
 
 const SUGGESTIONS = [
-  "Give me a snapshot of our pipeline right now",
-  "Which warm leads need follow-up this week?",
-  "Summarize what we shipped in the last 14 days",
-  "Draft an investor update from this month's milestones",
-  "Which pilots are running and how is each progressing?",
+  "Logged a call with Multiplex Drone today — they want a demo next week",
+  "Himanshi sent 20 cold emails this week to drone companies, 3 responses",
+  "Move Fuselage Innovations to Meeting Scheduled, follow up on the 5th",
+  "New pilot started with AvironiX Drones — wheat field in Punjab",
+  "Assign task to Himanshi: build 50-company outreach list by Friday",
 ];
 
 function CopilotPage() {
@@ -125,9 +125,9 @@ function ChatInner({
   return (
     <>
       <PageHeader
-        eyebrow="AI Assistant"
+        eyebrow="Data Operator"
         title="Nabhya Copilot"
-        description="Ask anything about your leads, pilots, tasks, applications and milestones. Powered by Lovable AI."
+        description="Tell me what happened — I update the system. Calls, tasks, pilots, milestones, product ships. No strategy, no coaching."
         action={
           messages.length > 0 ? (
             <Button
