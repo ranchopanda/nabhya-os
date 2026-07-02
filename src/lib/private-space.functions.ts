@@ -100,7 +100,7 @@ export const upsertPersonalTask = createServerFn({ method: "POST" })
     if (data.id) {
       const { data: row, error } = await context.supabase
         .from("personal_tasks")
-        .update(patch)
+        .update(patch as any)
         .eq("id", data.id)
         .eq("owner_id", context.userId)
         .select()
