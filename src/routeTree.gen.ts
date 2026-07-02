@@ -15,16 +15,19 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedTasksRouteImport } from './routes/_authenticated/tasks'
+import { Route as AuthenticatedPulseRouteImport } from './routes/_authenticated/pulse'
 import { Route as AuthenticatedProofRouteImport } from './routes/_authenticated/proof'
 import { Route as AuthenticatedProductRouteImport } from './routes/_authenticated/product'
 import { Route as AuthenticatedPilotsRouteImport } from './routes/_authenticated/pilots'
 import { Route as AuthenticatedMilestonesRouteImport } from './routes/_authenticated/milestones'
 import { Route as AuthenticatedMembersRouteImport } from './routes/_authenticated/members'
+import { Route as AuthenticatedMeRouteImport } from './routes/_authenticated/me'
 import { Route as AuthenticatedInvestorRouteImport } from './routes/_authenticated/investor'
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedDocumentsRouteImport } from './routes/_authenticated/documents'
 import { Route as AuthenticatedDataEntryRouteImport } from './routes/_authenticated/data-entry'
 import { Route as AuthenticatedCrmRouteImport } from './routes/_authenticated/crm'
+import { Route as AuthenticatedCopilotHistoryRouteImport } from './routes/_authenticated/copilot-history'
 import { Route as AuthenticatedCopilotRouteImport } from './routes/_authenticated/copilot'
 import { Route as AuthenticatedContentRouteImport } from './routes/_authenticated/content'
 import { Route as AuthenticatedApplicationsRouteImport } from './routes/_authenticated/applications'
@@ -58,6 +61,11 @@ const AuthenticatedTasksRoute = AuthenticatedTasksRouteImport.update({
   path: '/tasks',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPulseRoute = AuthenticatedPulseRouteImport.update({
+  id: '/pulse',
+  path: '/pulse',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedProofRoute = AuthenticatedProofRouteImport.update({
   id: '/proof',
   path: '/proof',
@@ -81,6 +89,11 @@ const AuthenticatedMilestonesRoute = AuthenticatedMilestonesRouteImport.update({
 const AuthenticatedMembersRoute = AuthenticatedMembersRouteImport.update({
   id: '/members',
   path: '/members',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMeRoute = AuthenticatedMeRouteImport.update({
+  id: '/me',
+  path: '/me',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedInvestorRoute = AuthenticatedInvestorRouteImport.update({
@@ -108,6 +121,12 @@ const AuthenticatedCrmRoute = AuthenticatedCrmRouteImport.update({
   path: '/crm',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCopilotHistoryRoute =
+  AuthenticatedCopilotHistoryRouteImport.update({
+    id: '/copilot-history',
+    path: '/copilot-history',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedCopilotRoute = AuthenticatedCopilotRouteImport.update({
   id: '/copilot',
   path: '/copilot',
@@ -131,16 +150,19 @@ export interface FileRoutesByFullPath {
   '/applications': typeof AuthenticatedApplicationsRoute
   '/content': typeof AuthenticatedContentRoute
   '/copilot': typeof AuthenticatedCopilotRoute
+  '/copilot-history': typeof AuthenticatedCopilotHistoryRoute
   '/crm': typeof AuthenticatedCrmRoute
   '/data-entry': typeof AuthenticatedDataEntryRoute
   '/documents': typeof AuthenticatedDocumentsRoute
   '/history': typeof AuthenticatedHistoryRoute
   '/investor': typeof AuthenticatedInvestorRoute
+  '/me': typeof AuthenticatedMeRoute
   '/members': typeof AuthenticatedMembersRoute
   '/milestones': typeof AuthenticatedMilestonesRoute
   '/pilots': typeof AuthenticatedPilotsRoute
   '/product': typeof AuthenticatedProductRoute
   '/proof': typeof AuthenticatedProofRoute
+  '/pulse': typeof AuthenticatedPulseRoute
   '/tasks': typeof AuthenticatedTasksRoute
   '/team': typeof AuthenticatedTeamRoute
   '/api/chat': typeof ApiChatRoute
@@ -150,16 +172,19 @@ export interface FileRoutesByTo {
   '/applications': typeof AuthenticatedApplicationsRoute
   '/content': typeof AuthenticatedContentRoute
   '/copilot': typeof AuthenticatedCopilotRoute
+  '/copilot-history': typeof AuthenticatedCopilotHistoryRoute
   '/crm': typeof AuthenticatedCrmRoute
   '/data-entry': typeof AuthenticatedDataEntryRoute
   '/documents': typeof AuthenticatedDocumentsRoute
   '/history': typeof AuthenticatedHistoryRoute
   '/investor': typeof AuthenticatedInvestorRoute
+  '/me': typeof AuthenticatedMeRoute
   '/members': typeof AuthenticatedMembersRoute
   '/milestones': typeof AuthenticatedMilestonesRoute
   '/pilots': typeof AuthenticatedPilotsRoute
   '/product': typeof AuthenticatedProductRoute
   '/proof': typeof AuthenticatedProofRoute
+  '/pulse': typeof AuthenticatedPulseRoute
   '/tasks': typeof AuthenticatedTasksRoute
   '/team': typeof AuthenticatedTeamRoute
   '/api/chat': typeof ApiChatRoute
@@ -172,16 +197,19 @@ export interface FileRoutesById {
   '/_authenticated/applications': typeof AuthenticatedApplicationsRoute
   '/_authenticated/content': typeof AuthenticatedContentRoute
   '/_authenticated/copilot': typeof AuthenticatedCopilotRoute
+  '/_authenticated/copilot-history': typeof AuthenticatedCopilotHistoryRoute
   '/_authenticated/crm': typeof AuthenticatedCrmRoute
   '/_authenticated/data-entry': typeof AuthenticatedDataEntryRoute
   '/_authenticated/documents': typeof AuthenticatedDocumentsRoute
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
   '/_authenticated/investor': typeof AuthenticatedInvestorRoute
+  '/_authenticated/me': typeof AuthenticatedMeRoute
   '/_authenticated/members': typeof AuthenticatedMembersRoute
   '/_authenticated/milestones': typeof AuthenticatedMilestonesRoute
   '/_authenticated/pilots': typeof AuthenticatedPilotsRoute
   '/_authenticated/product': typeof AuthenticatedProductRoute
   '/_authenticated/proof': typeof AuthenticatedProofRoute
+  '/_authenticated/pulse': typeof AuthenticatedPulseRoute
   '/_authenticated/tasks': typeof AuthenticatedTasksRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/api/chat': typeof ApiChatRoute
@@ -195,16 +223,19 @@ export interface FileRouteTypes {
     | '/applications'
     | '/content'
     | '/copilot'
+    | '/copilot-history'
     | '/crm'
     | '/data-entry'
     | '/documents'
     | '/history'
     | '/investor'
+    | '/me'
     | '/members'
     | '/milestones'
     | '/pilots'
     | '/product'
     | '/proof'
+    | '/pulse'
     | '/tasks'
     | '/team'
     | '/api/chat'
@@ -214,16 +245,19 @@ export interface FileRouteTypes {
     | '/applications'
     | '/content'
     | '/copilot'
+    | '/copilot-history'
     | '/crm'
     | '/data-entry'
     | '/documents'
     | '/history'
     | '/investor'
+    | '/me'
     | '/members'
     | '/milestones'
     | '/pilots'
     | '/product'
     | '/proof'
+    | '/pulse'
     | '/tasks'
     | '/team'
     | '/api/chat'
@@ -235,16 +269,19 @@ export interface FileRouteTypes {
     | '/_authenticated/applications'
     | '/_authenticated/content'
     | '/_authenticated/copilot'
+    | '/_authenticated/copilot-history'
     | '/_authenticated/crm'
     | '/_authenticated/data-entry'
     | '/_authenticated/documents'
     | '/_authenticated/history'
     | '/_authenticated/investor'
+    | '/_authenticated/me'
     | '/_authenticated/members'
     | '/_authenticated/milestones'
     | '/_authenticated/pilots'
     | '/_authenticated/product'
     | '/_authenticated/proof'
+    | '/_authenticated/pulse'
     | '/_authenticated/tasks'
     | '/_authenticated/team'
     | '/api/chat'
@@ -301,6 +338,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTasksRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/pulse': {
+      id: '/_authenticated/pulse'
+      path: '/pulse'
+      fullPath: '/pulse'
+      preLoaderRoute: typeof AuthenticatedPulseRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/proof': {
       id: '/_authenticated/proof'
       path: '/proof'
@@ -334,6 +378,13 @@ declare module '@tanstack/react-router' {
       path: '/members'
       fullPath: '/members'
       preLoaderRoute: typeof AuthenticatedMembersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/me': {
+      id: '/_authenticated/me'
+      path: '/me'
+      fullPath: '/me'
+      preLoaderRoute: typeof AuthenticatedMeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/investor': {
@@ -371,6 +422,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCrmRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/copilot-history': {
+      id: '/_authenticated/copilot-history'
+      path: '/copilot-history'
+      fullPath: '/copilot-history'
+      preLoaderRoute: typeof AuthenticatedCopilotHistoryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/copilot': {
       id: '/_authenticated/copilot'
       path: '/copilot'
@@ -399,16 +457,19 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedApplicationsRoute: typeof AuthenticatedApplicationsRoute
   AuthenticatedContentRoute: typeof AuthenticatedContentRoute
   AuthenticatedCopilotRoute: typeof AuthenticatedCopilotRoute
+  AuthenticatedCopilotHistoryRoute: typeof AuthenticatedCopilotHistoryRoute
   AuthenticatedCrmRoute: typeof AuthenticatedCrmRoute
   AuthenticatedDataEntryRoute: typeof AuthenticatedDataEntryRoute
   AuthenticatedDocumentsRoute: typeof AuthenticatedDocumentsRoute
   AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
   AuthenticatedInvestorRoute: typeof AuthenticatedInvestorRoute
+  AuthenticatedMeRoute: typeof AuthenticatedMeRoute
   AuthenticatedMembersRoute: typeof AuthenticatedMembersRoute
   AuthenticatedMilestonesRoute: typeof AuthenticatedMilestonesRoute
   AuthenticatedPilotsRoute: typeof AuthenticatedPilotsRoute
   AuthenticatedProductRoute: typeof AuthenticatedProductRoute
   AuthenticatedProofRoute: typeof AuthenticatedProofRoute
+  AuthenticatedPulseRoute: typeof AuthenticatedPulseRoute
   AuthenticatedTasksRoute: typeof AuthenticatedTasksRoute
   AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
@@ -418,16 +479,19 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedApplicationsRoute: AuthenticatedApplicationsRoute,
   AuthenticatedContentRoute: AuthenticatedContentRoute,
   AuthenticatedCopilotRoute: AuthenticatedCopilotRoute,
+  AuthenticatedCopilotHistoryRoute: AuthenticatedCopilotHistoryRoute,
   AuthenticatedCrmRoute: AuthenticatedCrmRoute,
   AuthenticatedDataEntryRoute: AuthenticatedDataEntryRoute,
   AuthenticatedDocumentsRoute: AuthenticatedDocumentsRoute,
   AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
   AuthenticatedInvestorRoute: AuthenticatedInvestorRoute,
+  AuthenticatedMeRoute: AuthenticatedMeRoute,
   AuthenticatedMembersRoute: AuthenticatedMembersRoute,
   AuthenticatedMilestonesRoute: AuthenticatedMilestonesRoute,
   AuthenticatedPilotsRoute: AuthenticatedPilotsRoute,
   AuthenticatedProductRoute: AuthenticatedProductRoute,
   AuthenticatedProofRoute: AuthenticatedProofRoute,
+  AuthenticatedPulseRoute: AuthenticatedPulseRoute,
   AuthenticatedTasksRoute: AuthenticatedTasksRoute,
   AuthenticatedTeamRoute: AuthenticatedTeamRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
@@ -444,13 +508,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -1,66 +1,106 @@
 
-## Goal
+# Private Spaces + Team Comms + Smarter Copilot
 
-Right now Copilot is **read-only**. You want it to behave like a data operator: when you or a team member type a free-form update (like the Himanshi briefing), Copilot should extract who/what/when, ask focused questions only for missing CRM fields, then write to leads, activities, tasks, pilots, milestones, applications, team members, and product updates — no fluff, no "let me plan your outreach", no strategy advice.
+Turn the OS into a workspace where every member has a hidden personal area, the team sees a live pulse of what's happening, and Copilot proactively surfaces work — with every write undoable.
 
-## What Copilot will do
+## 1. Private Member Space (`/me`)
 
-1. Read natural-language updates from team members ("Anand briefing Himanshi", "Himanshi finished call with Multiplex Drone", etc.).
-2. Detect intent + entities: which module (lead / task / pilot / activity / member / milestone / application / product update), which record (existing or new), who it concerns (assignee, team member).
-3. If a lead/company/person is mentioned, look it up first. If not found, propose creating it.
-4. Ask only the questions needed to fill required CRM fields — nothing else.
-5. On confirmation, write to the database and reply with a one-line receipt like: `✓ Lead "Multiplex Drone" updated → status: Contacted, next action: Send follow-up, assigned: Himanshi`.
-6. Never give sales advice, outreach plans, or coaching. Silent on strategy; loud on data.
+New route `src/routes/_authenticated/me.tsx` — four tabs, all scoped to `auth.uid()`. Founders can view any member's space via `/me/$userId` (read-only toggle).
 
-## Write tools to add to `src/routes/api/chat.ts`
+- **Notes** — markdown scratchpad, autosave, pinnable
+- **Personal Tasks** — separate from team tasks, due dates, quick-add
+- **Watchlist** — starred leads/pilots; personal mini-dashboard (my pipeline, my follow-ups this week)
+- **Private Copilot Thread** — second conversation, only reads the member's own data + notes (separate from team Copilot)
 
-All use the user-scoped `supabase` client (RLS + role check). Every tool returns `{ ok, id, summary }` or `{ needs, question }` when info is missing.
+New tables (all with `owner_id uuid` + RLS `owner_id = auth.uid() OR has_role(auth.uid(),'founder')`):
+- `private_notes` (title, body, pinned, updated_at)
+- `personal_tasks` (title, status, due_date, notes)
+- `watchlist` (entity_type: lead|pilot, entity_id) — unique per owner
+- `private_copilot_messages` (mirrors `copilot_messages` but scoped to owner; conversation_id column)
 
-- `findLead({ query })` — fuzzy match existing leads before create.
-- `upsertLead({ id?, company, contact_name?, designation?, email?, phone?, category?, status?, next_action?, follow_up_date?, notes? })`
-- `logLeadActivity({ lead_id, type, note, occurred_on? })` — call, email, meeting, note.
-- `updateLeadStatus({ lead_id, status, next_action?, follow_up_date? })` — shortcut.
-- `upsertTask({ id?, title, status?, due_date?, assignee_id?, notes? })` — resolves assignee by team-member name.
-- `upsertPilot({ id?, name, organization, status?, progress?, start_date?, end_date?, objectives?, results? })`
-- `upsertApplication({ id?, name, organizer, category?, date_applied?, stage?, result?, remarks? })`
-- `addMilestone({ title, description?, occurred_on?, category? })`
-- `addProductUpdate({ feature, description?, impact?, category?, owner_name?, occurred_on? })`
-- `upsertTeamMember({ id?, name, role?, responsibilities?, current_focus?, wins_this_month? })`
-- `resolveTeamMember({ name })` — resolves "Himanshi" / "Anand" to a team_members row + user_id for assignments.
+## 2. Team Comms
 
-All writes are gated by role: only `founder` or `team` can write (matches existing `can_edit()` DB function). Investors get read-only behavior as today.
+### Activity Feed (`/pulse`)
+New route showing real-time stream of everything that happened: leads created/moved, tasks completed, pilots updated, uploads, Copilot writes. Reads from a new unified `activity_events` table, populated by triggers on core tables + Copilot tool calls. Filter by member, module, date.
 
-## New system prompt (data-operator mode)
+### Comments on Records
+New `comments` table (entity_type, entity_id, author_id, body, mentions uuid[]). Add a `<CommentThread>` panel to Lead, Pilot, Task, Application, Milestone detail views. `@mention` autocomplete from team_members — mentions create notifications.
 
-Replace the current prompt with rules like:
+### Notifications Center
+New `notifications` table + bell icon in AppShell header with unread count. Types: mention, task assigned, follow-up due, Copilot action on your record, comment reply. Click → deep link to record. Realtime via Supabase channel.
 
-- You are a **CRM data operator**, not an advisor. Never suggest outreach, strategy, next steps, or messaging.
-- When the user describes an event, meeting, task, or update, extract structured fields and write them via tools.
-- Always call `findLead` / list tools before creating a new record — never duplicate.
-- If the update mentions a person by first name ("Himanshi", "Anand"), call `resolveTeamMember` to identify them.
-- Ask **only** for missing required CRM fields, one short question at a time (e.g. "Which company was this call with?").
-- Never ask about strategy, tone, timing, or opinion.
-- After writing, reply with a compact receipt (module, record, fields changed). No commentary.
-- If the message is pure knowledge/context (like the Himanshi guide), do **not** dump it into records. Ask: "Save this as a note against a specific lead / pilot / team member, or ignore?"
+## 3. Smarter Copilot
 
-## UI touch (`src/routes/_authenticated/copilot.tsx`)
+### Proactive Daily Brief
+On first Copilot open each day (or via `/pulse`), Copilot posts a personalized brief:
+- Overdue follow-ups on your leads
+- Stale leads (no activity 14+ days)
+- Your tasks due today/overdue
+- Pilots behind schedule
+- What the team shipped yesterday
 
-- Update the empty-state suggestion chips to data-operator prompts:
-  - "Logged a call with Multiplex Drone today — they want a demo next week"
-  - "Himanshi sent 20 cold emails this week, 3 responses"
-  - "Move Fuselage Innovations to Meeting Scheduled, follow up on the 5th"
-  - "New pilot started with AvironiX Drones, wheat field, Punjab"
-- Rename header description to "Your CRM data operator. Tell me what happened — I'll update the system."
-- Tool-call rendering already shows inputs/outputs, which acts as an audit trail.
+Built as a `getDailyBrief` server function that Copilot calls automatically on new-session detection.
 
-## Out of scope
+### Cross-Record Intelligence
+Add tools to `src/routes/api/chat.ts`:
+- `findStaleLeads({ days })` — leads with no activity in N days
+- `findOverdueFollowUps({ ownerId? })` — follow_up_date past
+- `findBehindPilots()` — pilots where progress < expected by end_date
+- `getMemberWorkload({ userId })` — open tasks, active leads, pilot count
+- `findGaps()` — leads without next_action, pilots without milestones, applications without follow-up
 
-- No new tables, no schema migration — all writes hit existing tables.
-- No changes to auth, roles, or RLS.
-- No bulk import UI; conversational only.
-- No sales coaching / strategy generation (explicitly disabled).
+### Undo & Audit Trail
+Every Copilot write already runs through tool calls — extend each write tool to also insert into `copilot_audit_log` (tool_name, user_id, entity_type, entity_id, before_json, after_json, action_id). New `/copilot/history` view lists last 100 actions per member with an **Undo** button that restores `before_json` (or deletes if action was insert). Undo window: 24h.
 
-## Files touched
+## 4. Privacy Model
 
-- `src/routes/api/chat.ts` — new system prompt + ~10 write tools.
-- `src/routes/_authenticated/copilot.tsx` — new suggestion chips + header copy.
+- Private spaces: RLS `owner_id = auth.uid() OR has_role(auth.uid(),'founder')`
+- Notifications: recipient-only + founder
+- Comments: visible to all team/founder (not investors)
+- DMs: **not included** (you didn't select them)
+
+## 5. Small UX upgrades
+
+- AppShell: add unread notification bell + "My Space" nav link
+- Lead/Pilot rows: add star button (adds to watchlist)
+- Global command palette (⌘K): jump to any record, "New note", "New personal task"
+
+## Technical breakdown
+
+**Migrations** (single batch):
+- `private_notes`, `personal_tasks`, `watchlist`, `private_copilot_messages`
+- `comments`, `notifications`, `activity_events`, `copilot_audit_log`
+- Triggers on `leads`, `pilots`, `tasks`, `applications`, `milestones`, `product_updates` → insert into `activity_events`
+- Realtime publication for `notifications`, `activity_events`, `comments`
+- All tables: proper GRANTs + RLS per role matrix
+
+**Server functions** (`src/lib/`):
+- `notes.functions.ts`, `personal-tasks.functions.ts`, `watchlist.functions.ts`
+- `comments.functions.ts` (with mention parsing → notifications insert)
+- `notifications.functions.ts` (list, markRead, markAllRead)
+- `copilot-audit.functions.ts` (list, undo)
+- `daily-brief.functions.ts`
+
+**Copilot** (`src/routes/api/chat.ts`):
+- 5 new read tools (stale/overdue/behind/workload/gaps)
+- Wrap all existing write tools with audit-log inserts
+- Detect new session → auto-inject daily brief as first assistant message
+- Add `conversation_scope` param: `team` (default) or `private`
+
+**Routes**:
+- `src/routes/_authenticated/me.tsx` (+ `/me/$userId` for founder view)
+- `src/routes/_authenticated/pulse.tsx` (activity feed)
+- `src/routes/_authenticated/copilot.history.tsx` (audit + undo)
+- `src/components/CommentThread.tsx`, `NotificationBell.tsx`, `StarButton.tsx`, `CommandPalette.tsx`
+
+**Out of scope** (per your answers): 1:1 DMs, MCP connectors, opt-in sharing flow.
+
+## Order of build
+
+1. Migrations (tables, RLS, triggers, realtime)
+2. Private space + notes/tasks/watchlist CRUD
+3. Comments + notifications + bell
+4. Activity feed page
+5. Copilot audit wrapper + undo
+6. Copilot new tools + daily brief + private thread
+7. Command palette + star buttons + polish
