@@ -22,7 +22,10 @@ import {
   Search,
   Sparkles,
   Menu,
+  User,
+  Activity,
 } from "lucide-react";
+import { NotificationBell } from "./NotificationBell";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { useCurrentRole } from "@/hooks/use-current-role";
@@ -30,6 +33,8 @@ import { GlobalSearch } from "./GlobalSearch";
 
 const nav = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, roles: ["founder", "team", "investor"] },
+  { to: "/pulse", label: "Team Pulse", icon: Activity, roles: ["founder", "team"] },
+  { to: "/me", label: "My Space", icon: User, roles: ["founder", "team"] },
   { to: "/copilot", label: "Copilot", icon: Sparkles, roles: ["founder", "team"] },
   { to: "/data-entry", label: "Data Entry", icon: DatabaseZap, roles: ["founder", "team"] },
   { to: "/crm", label: "CRM Pipeline", icon: Users, roles: ["founder", "team"] },
