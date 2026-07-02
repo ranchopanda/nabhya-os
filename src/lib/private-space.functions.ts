@@ -111,7 +111,7 @@ export const upsertPersonalTask = createServerFn({ method: "POST" })
     if (!data.title) throw new Error("title required");
     const { data: row, error } = await context.supabase
       .from("personal_tasks")
-      .insert({ ...patch, title: data.title, owner_id: context.userId })
+      .insert({ ...patch, title: data.title, owner_id: context.userId } as any)
       .select()
       .single();
     if (error) throw new Error(error.message);
