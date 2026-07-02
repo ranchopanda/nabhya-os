@@ -162,6 +162,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
           {renderNavLinks()}
         </nav>
+        <div className="hidden md:flex items-center justify-end gap-2 px-4 py-2 border-b bg-card">
+          <NotificationBell />
+        </div>
         {me && (
           <div className="m-3 rounded-lg border border-sidebar-border p-3">
             <div className="text-xs text-sidebar-foreground/60">
@@ -189,7 +192,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             <img src={logo.url} alt="Nabhya" className="h-7 w-7 rounded" />
             <span className="font-display font-semibold">Nabhya OS</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <NotificationBell />
             <Button
               variant="ghost"
               size="icon"
