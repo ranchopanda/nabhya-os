@@ -177,6 +177,79 @@ function buildTools(supabase: SupabaseUserClient, canEdit: boolean, actorName: s
         };
       },
     }),
+
+    findStaleLeads: tool({
+      description: "Leads with no update in N days (default 14), excluding Customer/Lost.",
+      inputSchema: z.object({ days: z.number().int().min(1).max(365).default(14) }),
+      execute: async ({ days }) => {
+        const cutoff = new Date(Date.now() - days * 86400_000).toISOString();
+        const { data, error } = await supabase
+          .from("leads")
+          .select("id, company, status, updated_at, next_action")
+          .lt("updated_at", cutoff)
+          .not("status", "in", "(Customer,Lost)")
+          .order("updated_at")
+          .limit(30);
+        if (error) return { error: error.message };
+        return { count: data?.length ?? 0, leads: data ?? [] };
+      },
+    }),
+
+    findOverdueFollowUps: tool({
+      description: "Leads whose follow_up_date is in the past.",
+      inputSchema: z.object({}),
+      execute: async () => {
+        const today = new Date().toISOString().slice(0, 10);
+        const { data, error } = await supabase
+          .from("leads")
+          .select("id, company, status, next_action, follow_up_date")
+          .lt("follow_up_date", today)
+          .not("status", "in", "(Customer,Lost)")
+          .order("follow_up_date")
+          .limit(30);
+        if (error) return { error: error.message };
+        return { count: data?.length ?? 0, leads: data ?? [] };
+      },
+    }),
+
+    findBehindPilots: tool({
+      description: "Pilots past end_date but not Completed.",
+      inputSchema: z.object({}),
+      execute: async () => {
+        const today = new Date().toISOString().slice(0, 10);
+        const { data, error } = await supabase
+          .from("pilots")
+          .select("id, name, organization, status, progress, end_date")
+          .lt("end_date", today)
+          .not("status", "eq", "Completed")
+          .order("end_date")
+          .limit(30);
+        if (error) return { error: error.message };
+        return { count: data?.length ?? 0, pilots: data ?? [] };
+      },
+    }),
+
+    getDailyBrief: tool({
+      description: "Personalized daily brief: overdue follow-ups, stale leads, my open tasks, behind pilots, recent team activity.",
+      inputSchema: z.object({}),
+      execute: async () => {
+        const today = new Date().toISOString().slice(0, 10);
+        const twoWeeksAgo = new Date(Date.now() - 14 * 86400_000).toISOString();
+        const yesterday = new Date(Date.now() - 86400_000).toISOString();
+        const [overdue, stale, behind, activity] = await Promise.all([
+          supabase.from("leads").select("id, company, follow_up_date, next_action").lt("follow_up_date", today).not("status","in","(Customer,Lost)").limit(10),
+          supabase.from("leads").select("id, company, status, updated_at").lt("updated_at", twoWeeksAgo).not("status","in","(Customer,Lost)").limit(10),
+          supabase.from("pilots").select("id, name, organization, end_date").lt("end_date", today).not("status","eq","Completed").limit(10),
+          supabase.from("activity_events").select("action, entity_type, entity_label, actor_name, created_at").gt("created_at", yesterday).order("created_at",{ascending:false}).limit(15),
+        ]);
+        return {
+          overdue_follow_ups: overdue.data ?? [],
+          stale_leads: stale.data ?? [],
+          behind_pilots: behind.data ?? [],
+          recent_team_activity: activity.data ?? [],
+        };
+      },
+    }),
   };
 
   if (!canEdit) return readTools;
